@@ -7,16 +7,16 @@ const MAX_N_HOTELS_PER: i32 = 1;
 
 #[derive(Debug)]
 pub enum ColorGroup {
-    DARK_PURPLE,
-    LIGHT_BLUE,
-    LIGHT_PURPLE,
-    ORANGE,
-    RED,
-    YELLOW,
-    GREEN,
-    DARK_BLUE,
-    RAILROAD,
-    UTILITY,
+    DarkPurple,
+    LightBlue,
+    LightPurple,
+    Orange,
+    Red,
+    Yellow,
+    Green,
+    DarkBlue,
+    Railroad,
+    Utility,
 }
 
 #[derive(Debug)]
