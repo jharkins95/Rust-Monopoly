@@ -1,5 +1,5 @@
 [package]
-name = "Monopoly"
+name = "rust-monopoly"
 version = "0.1.0"
 authors = ["Jack Harkins <harkj@seas.upenn.edu>"]
 
