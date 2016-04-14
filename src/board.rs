@@ -39,7 +39,7 @@ pub enum Space {
     IncomeTax(i32),
 }
 
-/// A Board contains all useful game state
+/// A Board contains all useful game state (players, spaces, properties)
 #[derive(Debug)]
 pub struct Board {
     unclaimed_houses: i32,
