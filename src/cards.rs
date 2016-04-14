@@ -1,3 +1,4 @@
+/// Represents a Community Chest card
 pub enum CommunityChest {
     AdvanceToGo,
     BankErrorInYourFavor(i32),
@@ -6,6 +7,7 @@ pub enum CommunityChest {
     GetOutOfJailFree,
 }
 
+/// Represents a Chance card
 pub enum Chance {
     AdvanceToGo,
     AdvanceToNearestUtility,
