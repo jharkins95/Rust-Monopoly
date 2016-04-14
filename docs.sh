@@ -13,7 +13,7 @@ cd .gh-pages
 git init
 
 # Copy docs
-cp -r ../target/doc/*
+cp -r ../target/doc/* .
 cat <<EOF > index.html
 <!DOCTYPE html>
 <html>
@@ -27,6 +27,7 @@ git add -f --all
 git commit -m "Built documentation"
 git checkout -b gh-pages
 git remote add origin git@github.com:jharkins95/Rust-Monopoly.git
+git push -qf origin gh-pages
 
 # Cleanup
 cd .. 
