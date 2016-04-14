@@ -2,8 +2,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use player::Player;
 
-const MAX_N_HOUSES_PER: i32 = 4;
-const MAX_N_HOTELS_PER: i32 = 1;
+const MAX_NUM_HOUSES: i32 = 4;
+const MAX_NUM_HOTELS: i32 = 1;
 
 #[derive(Debug)]
 pub enum ColorGroup {
@@ -22,17 +22,17 @@ pub enum ColorGroup {
 #[derive(Debug)]
 pub struct Property {
     name: String,
-    purchase_price: i32,
-    base_rent: i32,
+    purchase_price: u32,
+    base_rent: u32,
     color_group: ColorGroup,
     owner: Option<Rc<RefCell<Player>>>,
     is_mortgaged: bool,
-    num_houses: i32,
-    num_hotels: i32,
+    num_houses: u32,
+    num_hotels: u32,
 }
 
 impl Property {
-    pub fn new(name: String, purchase_price: i32, base_rent: i32,
+    pub fn new(name: String, purchase_price: u32, base_rent: u32,
                color_group: ColorGroup) -> Self {
         Property {
             name: name,
@@ -62,7 +62,58 @@ impl Property {
         self.is_mortgaged
     }
 
-    pub fn get_owner(&self) -> Option<Player> {
-        None
+    pub fn get_rent(&self) -> Result<u32, String> {
+        Ok(self.base_rent) // TODO: calculate rent based on hotels, houses, monops
+    }
+
+    pub fn get_owner(&self) -> Option<Rc<RefCell<Player>>> {
+        self.owner.clone()
+    }
+
+    pub fn add_houses(&mut self, houses: u32) -> Result<(), String> {
+        let num_houses = self.num_houses as i32;
+        let houses = houses as i32;
+        if num_houses + houses >= MAX_NUM_HOUSES {
+            return Err(format!("{} cannot have more than {} houses!",
+                self.name, self.num_houses))
+        }
+        self.num_houses += houses as u32;
+        Ok(())
+    }
+
+    pub fn get_purchase_price(&self) -> u32 {
+        self.purchase_price
+    }
+
+    pub fn remove_houses(&mut self, houses: u32) -> Result<(), String> {
+        let num_houses = self.num_houses as i32;
+        let houses = houses as i32;
+        if num_houses - houses < 0 {
+            return Err(format!("{} cannot have less than 0 houses!", self.name))
+        }
+        self.num_houses -= houses as u32;
+        Ok(())
+    }
+
+    pub fn add_hotel(&mut self) -> Result<(), String> {
+        let num_hotels = self.num_hotels as i32;
+        if num_hotels + 1 >= MAX_NUM_HOTELS {
+            return Err(format!("{} already has a hotel!", self.name))
+        }
+        self.num_hotels += 1;
+        Ok(())
+    }
+
+    pub fn remove_hotel(&mut self) -> Result<(), String> {
+        let num_hotels = self.num_hotels as i32;
+        if num_hotels - 1 < 0 {
+            return Err(format!("{} cannot have less than 0 hotels!", self.name))
+        }
+        self.num_hotels -= 1;
+        Ok(())
+    }
+    
+    pub fn is_owned(&self) -> bool {
+        !(self.owner.is_none())
     }
 }

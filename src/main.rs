@@ -20,37 +20,29 @@ const WINDOW_WIDTH: u32 = 640;
 const WINDOW_HEIGHT: u32 = 480;
 
 pub struct App {
-    rotation: f64   // rotation for the square
+    x: i32,
+    y: i32,
 }
 
 impl App {
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
         use graphics::*;
 
+        const WHITE: [f32; 4] = [1.0; 4];
         const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
         const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 
         let square = rectangle::square(0.0, 0.0, 50.0);
-        let rotation = self.rotation;
-        let (x, y) = ((args.width / 2) as f64,
-                      (args.height / 2) as f64);
 
         gl.draw(args.viewport(), |c, gl| {
             // Clear the screen.
-            clear(GREEN, gl);
+            clear(WHITE, gl);
 
-            let transform = c.transform.trans(x, y)
-                                       .rot_rad(rotation)
-                                       .trans(-25.0, -25.0);
+            let transform = c.transform.trans(self.x as f64, self.y as f64);
 
             // Draw a box rotating around the middle of the screen.
             rectangle(RED, square, transform, gl);
         });
-    }
-
-    fn update(&mut self, gl: &mut GlGraphics, args: &UpdateArgs) {
-        // Rotate 2 radians per second.
-        self.rotation += 0.0 * args.dt;
     }
 }
 
@@ -70,21 +62,30 @@ fn main() {
 
     // Create a new game and run it.
     let mut app = App {
-        rotation: 0.0
+        x: 0,
+        y: 0,
     };
     
     let mut gl = GlGraphics::new(opengl);
     
     let mut board = board::Board::new();
-    board.start_game();
+    board.setup_game();
+    
+    let mut cursor = [0.0, 0.0];
 
+    // Main event loop
     let mut events = window.events();
     while let Some(e) = events.next(&mut window) {
-    
-        if let Some(u) = e.update_args() {
-            app.update(&mut gl, &u);
+        if let Some(Button::Mouse(button)) = e.press_args() {
+            println!("Pressed mouse button {:?}", button);
         }
-    
+        
+        e.mouse_cursor(|x, y| {
+            app.x = x as i32;
+            app.y = y as i32;
+            println!("Mouse moved {}, {}", x, y);
+        });
+        
         board.update_game_state();
     
         if let Some(r) = e.render_args() {

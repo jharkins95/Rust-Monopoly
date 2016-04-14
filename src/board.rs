@@ -1,10 +1,12 @@
 extern crate rand;
 extern crate opengl_graphics;
 extern crate piston;
+extern crate core;
 
 use std;
 use std::io::{self, Read, Write};
 use std::collections::VecDeque;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::cell::RefCell;
 use rand::Rng;
@@ -12,24 +14,25 @@ use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::*;
 
 use super::player::Player;
-use super::property::Property;
+use super::property::{Property, ColorGroup};
 
 const TOTAL_NUM_HOUSES: i32 = 32;
 const TOTAL_NUM_HOTELS: i32 = 12;
 const NUM_SPACES: usize = 40;
+const MAX_NUM_PLAYERS: u32 = 6;
+pub const GO_SALARY: i32 = 200;
 
 /// Objects that can be drawn to the screen with
 /// the Piston/OpenGL framework
 pub trait Draw {
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs);
-    fn update(&mut self, gl: &mut GlGraphics, args: &UpdateArgs);
 }
 
 /// Represents a space on the board that players can land on
 /// (not necessarily a property)
 #[derive(Debug)]
 pub enum Space {
-    Prop(Property),
+    Prop(Rc<RefCell<Property>>),
     Go(i32),
     Chance,
     CommunityChest,
@@ -37,6 +40,7 @@ pub enum Space {
     FreeParking,
     GoToJail,
     IncomeTax(i32),
+    LuxuryTax(i32),
 }
 
 /// A Board contains all useful game state (players, spaces, properties)
@@ -44,8 +48,8 @@ pub enum Space {
 pub struct Board {
     unclaimed_houses: i32,
     unclaimed_hotels: i32,
-    spaces: Rc<RefCell<VecDeque<Space>>>,
-    players: Rc<RefCell<Vec<Player>>>,
+    spaces: VecDeque<Rc<RefCell<Space>>>,
+    players: Vec<Player>,
 }
 
 impl Board {
@@ -53,8 +57,8 @@ impl Board {
         Board {
             unclaimed_houses: TOTAL_NUM_HOUSES,
             unclaimed_hotels: TOTAL_NUM_HOTELS,
-            spaces: Rc::new(RefCell::new(VecDeque::with_capacity(NUM_SPACES))),
-            players: Rc::new(RefCell::new(Vec::new())),
+            spaces: VecDeque::with_capacity(NUM_SPACES),
+            players: Vec::new(),
         }
     }
     
@@ -62,34 +66,243 @@ impl Board {
     pub fn update_game_state(&mut self) {
         
     }
-    
-    pub fn start_game(&mut self) {
+
+    fn fill_spaces(&mut self) {
+        let go = Space::Go(GO_SALARY);
+        let chance_bot = Space::Chance;
+        let chance_top = Space::Chance;
+        let chance_right = Space::Chance;
+        let comm_chest_bot = Space::CommunityChest;
+        let comm_chest_left = Space::CommunityChest;
+        let comm_chest_right = Space::CommunityChest;
+        let jail = Space::Jail;
+        let free_parking = Space::FreeParking;
+        let go_to_jail = Space::GoToJail;
+        let income_tax = Space::IncomeTax(200);
+        let luxury_tax = Space::LuxuryTax(75);
+        
+        let med_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Mediterranean Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::DarkPurple))));
+        let balt_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Baltic Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::DarkPurple))));    
+        let reading_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Reading Railroad".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Railroad))));    
+        let orient_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Oriental Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::LightBlue))));     
+        let verm_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Vermont Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::LightBlue))));          
+        let conn_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Connecticut Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::LightBlue))));   
+        let st_char_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "St. Charles Place".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::LightPurple))));         
+        let states_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "States Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::LightPurple))));   
+        let va_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Virginia Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::LightPurple))));       
+        let pa_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Pennsylvania Railroad".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Railroad))));   
+        let st_james_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "St. James Place".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Orange))));      
+        let tn_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Tennessee Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Orange))));       
+        let ny_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "New York Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Orange))));     
+        let ky_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Kentucky Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Red))));     
+        let in_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Indiana Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Red))));       
+        let il_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Illinois Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Red))));     
+        let atl_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Atlantic Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Yellow))));   
+        let bo_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "B&O Railroad".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Railroad))));                                   
+        let atl_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Atlantic Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::DarkPurple))));      
+        let ventnor_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Ventnor Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Yellow))));      
+        let mar_gard = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Marvin Gardens".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Yellow))));      
+        let pac_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Pacific Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Green))));     
+        let nc_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "North Carolina Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Green))));       
+        let pa_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Pennsylvania Avenue".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Green))));    
+        let sl_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Short Line".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Railroad))));      
+        let park_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Park Place".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::DarkBlue)))); 
+        let bdwk = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Boardwalk".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::DarkBlue))));      
+        let elec_util = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Electric Company".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Utility))));   
+        let water_util = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  "Water Works".to_string(),
+                                  0,
+                                  0,
+                                  ColorGroup::Utility))));                                   
+                                   
+                                   
+        
+        self.spaces.push_back(Rc::new(RefCell::new(go)));
+        self.spaces.push_back(Rc::new(RefCell::new(med_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(comm_chest_bot)));
+        self.spaces.push_back(Rc::new(RefCell::new(balt_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(income_tax)));
+        self.spaces.push_back(Rc::new(RefCell::new(reading_rr)));
+        self.spaces.push_back(Rc::new(RefCell::new(orient_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(chance_bot)));
+        self.spaces.push_back(Rc::new(RefCell::new(verm_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(conn_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(jail)));
+        self.spaces.push_back(Rc::new(RefCell::new(st_char_pl)));
+        self.spaces.push_back(Rc::new(RefCell::new(elec_util)));
+        self.spaces.push_back(Rc::new(RefCell::new(states_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(va_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(pa_rr)));
+        self.spaces.push_back(Rc::new(RefCell::new(st_james_pl)));
+        self.spaces.push_back(Rc::new(RefCell::new(comm_chest_left)));
+        self.spaces.push_back(Rc::new(RefCell::new(tn_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(ny_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(free_parking)));
+        self.spaces.push_back(Rc::new(RefCell::new(ky_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(chance_top)));
+        self.spaces.push_back(Rc::new(RefCell::new(in_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(il_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(bo_rr)));
+        self.spaces.push_back(Rc::new(RefCell::new(atl_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(ventnor_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(water_util)));
+        self.spaces.push_back(Rc::new(RefCell::new(mar_gard)));
+        self.spaces.push_back(Rc::new(RefCell::new(go_to_jail)));
+        self.spaces.push_back(Rc::new(RefCell::new(pac_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(nc_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(comm_chest_right)));
+        self.spaces.push_back(Rc::new(RefCell::new(pa_ave)));
+        self.spaces.push_back(Rc::new(RefCell::new(sl_rr)));
+        self.spaces.push_back(Rc::new(RefCell::new(chance_right)));
+        self.spaces.push_back(Rc::new(RefCell::new(park_pl)));
+        self.spaces.push_back(Rc::new(RefCell::new(luxury_tax)));
+        self.spaces.push_back(Rc::new(RefCell::new(bdwk)));
+        
+        
+    }
+
+    pub fn setup_game(&mut self) {
         let mut input = String::new();
         let mut num_players = 2; // default
     
         println!("Welcome to Monopoly!");
         print!("How many players today? ");
-        io::stdout().flush();
-        loop {
-            io::stdin().read_line(&mut input).unwrap();
-            println!("Input was {}", input);
-            match input.trim().parse::<i32>() {
-                Ok(n) => {
-                    num_players = n;
-                    break;
-                },
-                Err(e) => { 
-                    print!("Please enter a valid integer ");
-                    io::stdout().flush();
-                },
-            }
-        }
         
+        let num_players = get_num_players();
+        
+        let mut turns_to_names: BTreeMap<i32, String> = BTreeMap::new();
+
         for i in 0..num_players {
             println!("Please enter Player {}'s name: ", i + 1);
+            let mut name = String::new();
+            io::stdin().read_line(&mut name).unwrap();
+            
+            let mut n = get_dice_roll();
+            while turns_to_names.contains_key(&n) {
+                n = get_dice_roll();
+            }
+            turns_to_names.insert(n, name.trim().to_string());
+        }
+
+        for (_, name) in turns_to_names {
+            self.players.push(Player::new(name, Space::Go(GO_SALARY)));
         }
         
-        println!("Game setup OK");
+        self.fill_spaces();
+        
+        println!("Game setup complete.");
         
     }
 }
@@ -98,10 +311,46 @@ impl Draw for Board {
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
         unimplemented!();
     }
+}
+
+
+/*
+ *  UTILITY FUNCTIONS
+ */
+
+/// Get a yes/no answer from stdin
+pub fn confirm_prompt() -> bool {
+    loop {
+        let mut input = String::new();
+        io::stdout().flush();
+        io::stdin().read_line(&mut input).unwrap();
+        match &(*input.trim().to_lowercase()) {
+            "yes" => return true,
+            "no"  => return false,
+            _ => println!("Please enter yes or no"),
+        }
+    }
+}
+
+/// Get an integer from stdin
+pub fn get_num_players() -> u32 {
+    use std::str::FromStr;
     
-    
-    fn update(&mut self, gl: &mut GlGraphics, args: &UpdateArgs) {
-        unimplemented!();
+    loop {
+        let mut input = String::new();
+        io::stdout().flush();
+        io::stdin().read_line(&mut input).unwrap();
+        match u32::from_str(&(input.trim())) {
+            Ok(n) => {
+                if n < 2 || n > MAX_NUM_PLAYERS {
+                    println!("Number of players must be >= 2 and <= {}",
+                             MAX_NUM_PLAYERS);
+                } else {
+                    return n;
+                }
+            },
+            Err(e) => println!("Please enter an integer"),
+        }
     }
 }
 
