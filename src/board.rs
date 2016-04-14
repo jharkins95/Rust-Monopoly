@@ -49,7 +49,7 @@ pub struct Board {
     unclaimed_houses: i32,
     unclaimed_hotels: i32,
     spaces: VecDeque<Rc<RefCell<Space>>>,
-    players: Vec<Player>,
+    players: Vec<Rc<RefCell<Player>>>,
 }
 
 impl Board {
@@ -83,148 +83,143 @@ impl Board {
         
         let med_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Mediterranean Avenue".to_string(),
-                                  0,
-                                  0,
+                                  60,
+                                  2,
                                   ColorGroup::DarkPurple))));
         let balt_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Baltic Avenue".to_string(),
-                                  0,
-                                  0,
+                                  60,
+                                  4,
                                   ColorGroup::DarkPurple))));    
         let reading_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Reading Railroad".to_string(),
-                                  0,
-                                  0,
+                                  150,
+                                  25,
                                   ColorGroup::Railroad))));    
         let orient_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Oriental Avenue".to_string(),
-                                  0,
-                                  0,
+                                  100,
+                                  6,
                                   ColorGroup::LightBlue))));     
         let verm_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Vermont Avenue".to_string(),
-                                  0,
-                                  0,
+                                  100,
+                                  6,
                                   ColorGroup::LightBlue))));          
         let conn_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Connecticut Avenue".to_string(),
-                                  0,
-                                  0,
+                                  120,
+                                  8,
                                   ColorGroup::LightBlue))));   
         let st_char_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "St. Charles Place".to_string(),
-                                  0,
-                                  0,
+                                  140,
+                                  10,
                                   ColorGroup::LightPurple))));         
         let states_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "States Avenue".to_string(),
-                                  0,
-                                  0,
+                                  140,
+                                  10,
                                   ColorGroup::LightPurple))));   
         let va_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Virginia Avenue".to_string(),
-                                  0,
-                                  0,
+                                  160,
+                                  12,
                                   ColorGroup::LightPurple))));       
         let pa_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Pennsylvania Railroad".to_string(),
-                                  0,
-                                  0,
+                                  150,
+                                  25,
                                   ColorGroup::Railroad))));   
         let st_james_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "St. James Place".to_string(),
-                                  0,
-                                  0,
+                                  180,
+                                  14,
                                   ColorGroup::Orange))));      
         let tn_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Tennessee Avenue".to_string(),
-                                  0,
-                                  0,
+                                  180,
+                                  14,
                                   ColorGroup::Orange))));       
         let ny_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "New York Avenue".to_string(),
-                                  0,
-                                  0,
+                                  200,
+                                  16,
                                   ColorGroup::Orange))));     
         let ky_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Kentucky Avenue".to_string(),
-                                  0,
-                                  0,
+                                  220,
+                                  18,
                                   ColorGroup::Red))));     
         let in_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Indiana Avenue".to_string(),
-                                  0,
-                                  0,
+                                  220,
+                                  18,
                                   ColorGroup::Red))));       
         let il_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Illinois Avenue".to_string(),
-                                  0,
-                                  0,
-                                  ColorGroup::Red))));     
-        let atl_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
-                                  "Atlantic Avenue".to_string(),
-                                  0,
-                                  0,
-                                  ColorGroup::Yellow))));   
+                                  240,
+                                  20,
+                                  ColorGroup::Red))));       
         let bo_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "B&O Railroad".to_string(),
-                                  0,
-                                  0,
+                                  150,
+                                  25,
                                   ColorGroup::Railroad))));                                   
         let atl_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Atlantic Avenue".to_string(),
-                                  0,
-                                  0,
+                                  260,
+                                  22,
                                   ColorGroup::DarkPurple))));      
         let ventnor_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Ventnor Avenue".to_string(),
-                                  0,
-                                  0,
+                                  260,
+                                  22,
                                   ColorGroup::Yellow))));      
         let mar_gard = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Marvin Gardens".to_string(),
-                                  0,
-                                  0,
+                                  280,
+                                  22,
                                   ColorGroup::Yellow))));      
         let pac_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Pacific Avenue".to_string(),
-                                  0,
-                                  0,
+                                  300,
+                                  26,
                                   ColorGroup::Green))));     
         let nc_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "North Carolina Avenue".to_string(),
-                                  0,
-                                  0,
+                                  300,
+                                  26,
                                   ColorGroup::Green))));       
         let pa_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Pennsylvania Avenue".to_string(),
-                                  0,
-                                  0,
+                                  320,
+                                  28,
                                   ColorGroup::Green))));    
         let sl_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Short Line".to_string(),
-                                  0,
-                                  0,
+                                  150,
+                                  25,
                                   ColorGroup::Railroad))));      
         let park_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Park Place".to_string(),
-                                  0,
-                                  0,
+                                  350,
+                                  35,
                                   ColorGroup::DarkBlue)))); 
         let bdwk = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Boardwalk".to_string(),
-                                  0,
-                                  0,
+                                  400,
+                                  50,
                                   ColorGroup::DarkBlue))));      
         let elec_util = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Electric Company".to_string(),
-                                  0,
-                                  0,
+                                  150,
+                                  8,
                                   ColorGroup::Utility))));   
         let water_util = Space::Prop(Rc::new(RefCell::new(Property::new(
                                   "Water Works".to_string(),
-                                  0,
-                                  0,
+                                  150,
+                                  8,
                                   ColorGroup::Utility))));                                   
                                    
                                    
@@ -297,10 +292,12 @@ impl Board {
         }
 
         for (_, name) in turns_to_names {
-            self.players.push(Player::new(name, Space::Go(GO_SALARY)));
+            self.players.push(Rc::new(RefCell::new(
+                              Player::new(name, Space::Go(GO_SALARY)))));
         }
         
         self.fill_spaces();
+        self.players[0].borrow_mut().set_turn(true);
         
         println!("Game setup complete.");
         

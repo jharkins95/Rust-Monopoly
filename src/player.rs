@@ -10,6 +10,8 @@ const STARTING_CASH: i32 = 1500;
 pub struct Player {
     name: String,
     cash: i32,
+    in_jail: bool,
+    has_turn: bool,
     space: Space,
     properties: Vec<Rc<RefCell<Property>>>,
 }
@@ -19,6 +21,8 @@ impl Player {
         Player {
             name: name,
             cash: STARTING_CASH,
+            in_jail: false,
+            has_turn: false,
             space: start_space,
             properties: Vec::new(),
         }
@@ -61,14 +65,17 @@ impl Player {
                 println!("You landed on GO! Collect ${}.", salary);
                 self.cash += salary;
             },
-            Space::Chance => unimplemented!(),
-            Space::CommunityChest => unimplemented!(),
+            Space::Chance => {println!("Landed on Chance");},
+            Space::CommunityChest => {println!("Landed on CC");},
             Space::Jail => println!("Just visiting..."),
-            Space::FreeParking => unimplemented!(),
+            Space::FreeParking => {
+                println!("Landed on Free Parking");
+            },
             Space::GoToJail => {
                 println!("Go to jail! Go directly to jail! Do not pass\
                           GO! Do not collect ${}!", GO_SALARY);
                 self.space = Space::GoToJail;
+                self.jail();
                 return;
             },
             Space::IncomeTax(tax) => {
@@ -93,6 +100,14 @@ impl Player {
 
     pub fn is_bankrupt(&self) -> bool {
         self.cash <= 0
+    }
+    
+    pub fn jail(&mut self) {
+        self.in_jail = true;
+    }
+    
+    pub fn set_turn(&mut self, turn: bool) {
+        self.has_turn = turn;
     }
 
     pub fn collect_rent(&mut self, other: &mut Player, property: &Property) {
