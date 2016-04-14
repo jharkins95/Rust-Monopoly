@@ -17,7 +17,7 @@ cp -r ../target/doc/*
 cat <<EOF > index.html
 <!DOCTYPE html>
 <html>
-  <title>rust-monopoly</title>
+  <title>Rust-Monopoly</title>
   <meta http-equiv=refresh content=0;url=rust_monopoly/index.html>
 </html>
 EOF
