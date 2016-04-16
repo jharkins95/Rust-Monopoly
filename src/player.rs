@@ -1,5 +1,5 @@
 use std;
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use std::cell::RefCell;
 use super::property::Property;
 use super::board::*;
@@ -7,17 +7,27 @@ use super::board::*;
 const STARTING_CASH: i32 = 1500;
 
 #[derive(Debug)]
+pub enum LandAction {
+    Rent,
+    Own,
+    InsFunds,
+    Purchase(Rc<RefCell<Property>>),
+    NoPurchase,
+    Space,
+}
+
+#[derive(Debug)]
 pub struct Player {
     name: String,
     cash: i32,
     in_jail: bool,
     has_turn: bool,
-    space: Space,
+    space: usize, // index into spaces array in Board
     properties: Vec<Rc<RefCell<Property>>>,
 }
 
 impl Player {
-    pub fn new(name: String, start_space: Space) -> Player {
+    pub fn new(name: String, start_space: usize) -> Player {
         Player {
             name: name,
             cash: STARTING_CASH,
@@ -28,26 +38,33 @@ impl Player {
         }
     }
 
-    pub fn land(&mut self, space: Space) {
-        match space {
+    pub fn land(&mut self, spaces: 
+                &Vec<Rc<RefCell<Space>>>, index: usize) -> LandAction {
+                
+        let space = spaces[index].borrow();
+        //self.space = index;
+        match *space {
             Space::Prop(ref property) => {
                 if property.borrow().is_owned() {
-                    let owner = property.borrow().get_owner().unwrap();
-                    let mut owner = owner.borrow_mut();
-                    if *self == *owner {
+                    if self.properties.contains(property) {
+                        let property = property.borrow();
                         println!("You already own {}.",
-                                 property.borrow().get_name());
-                    } else {
-                        println!("{} is owned by {}. Pay ${}!", 
-                                 property.borrow().get_name(),
-                                 owner.get_name(), 
-                                 property.borrow().get_rent().unwrap());
-                        owner.collect_rent(self, 
-                                                        &*property.borrow());
+                                property.get_name());
+                        return LandAction::Own;
                     }
+                    let property = property.borrow();
+                    let owner_rc = property.get_owner();
+                    let mut owner = (*owner_rc).borrow_mut();
+                    println!("{} is owned by {}. Pay rent of ${}!", 
+                             property.get_name(),
+                             owner.get_name(), 
+                             property.get_rent().unwrap());
+                    owner.collect_rent(self, &*property);
+                    return LandAction::Rent;
                 } else {
                     if self.cash < property.borrow().get_purchase_price() as i32 {
                         println!("You don't have enough money for that!");
+                        return LandAction::InsFunds;
                     } else {
                         println!("{} is not owned. Would you like to buy it?",
                                  property.borrow().get_name());
@@ -56,8 +73,11 @@ impl Player {
                                     self.name,
                                     property.borrow().get_name(),
                                     property.borrow().get_purchase_price());
+                            self.cash -= property.borrow().get_purchase_price() as i32;
                             self.properties.push(property.clone());
+                            return LandAction::Purchase(property.clone());
                         }
+                        return LandAction::NoPurchase;
                     }
                 }
             },
@@ -74,9 +94,9 @@ impl Player {
             Space::GoToJail => {
                 println!("Go to jail! Go directly to jail! Do not pass\
                           GO! Do not collect ${}!", GO_SALARY);
-                self.space = Space::GoToJail;
+                self.space = 10;
                 self.jail();
-                return;
+                return LandAction::Space;
             },
             Space::IncomeTax(tax) => {
                 println!("INCOME TAX! Pay 10% or ${}", tax);
@@ -87,7 +107,11 @@ impl Player {
                 self.cash -= tax;
             },
         };
-        self.space = space;
+        LandAction::Space
+    }
+    
+    pub fn get_space(&self) -> usize {
+        self.space
     }
 
     pub fn get_name(&self) -> String {
@@ -108,6 +132,12 @@ impl Player {
     
     pub fn set_turn(&mut self, turn: bool) {
         self.has_turn = turn;
+    }
+    
+    pub fn print_assets(&self) {
+        for asset in &(self.properties) {
+            println!("{}", asset.borrow().get_name());
+        }
     }
 
     pub fn collect_rent(&mut self, other: &mut Player, property: &Property) {

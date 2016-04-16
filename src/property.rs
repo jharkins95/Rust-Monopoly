@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use std::cell::RefCell;
 use player::Player;
 
@@ -66,8 +66,11 @@ impl Property {
         Ok(self.base_rent) // TODO: calculate rent based on hotels, houses, monops
     }
 
-    pub fn get_owner(&self) -> Option<Rc<RefCell<Player>>> {
-        self.owner.clone()
+    pub fn get_owner(&self) -> &Rc<RefCell<Player>> {
+        match self.owner {
+            None => panic!(""),
+            Some(ref owner) => owner,
+        }
     }
 
     pub fn add_houses(&mut self, houses: u32) -> Result<(), String> {
@@ -114,6 +117,16 @@ impl Property {
     }
     
     pub fn is_owned(&self) -> bool {
-        !(self.owner.is_none())
+        !(self.owner == None)
+    }
+    
+    pub fn purchase(&mut self, owner: Rc<RefCell<Player>>) {
+        self.owner = Some(owner);
+    }
+}
+
+impl PartialEq for Property {
+    fn eq(&self, other: &Property) -> bool {
+        self.name == other.name
     }
 }

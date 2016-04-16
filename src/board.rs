@@ -8,19 +8,29 @@ use std::io::{self, Read, Write};
 use std::collections::VecDeque;
 use std::collections::BTreeMap;
 use std::rc::Rc;
+use std::process;
+use std::fmt;
 use std::cell::RefCell;
 use rand::Rng;
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::*;
 
-use super::player::Player;
+use super::player::{Player, LandAction};
 use super::property::{Property, ColorGroup};
 
 const TOTAL_NUM_HOUSES: i32 = 32;
 const TOTAL_NUM_HOTELS: i32 = 12;
 const NUM_SPACES: usize = 40;
-const MAX_NUM_PLAYERS: u32 = 6;
+const MAX_NUM_PLAYERS: i32 = 6;
 pub const GO_SALARY: i32 = 200;
+
+/// Represents a player's choice on their turn
+pub enum Turn {
+    Roll,
+    Quit,
+    GetAssets,
+    // TODO: add more types of actions (trades, buy/sell houses)
+}
 
 /// Objects that can be drawn to the screen with
 /// the Piston/OpenGL framework
@@ -43,13 +53,20 @@ pub enum Space {
     LuxuryTax(i32),
 }
 
+impl fmt::Display for Space {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "")
+    }
+}
+
 /// A Board contains all useful game state (players, spaces, properties)
 #[derive(Debug)]
 pub struct Board {
     unclaimed_houses: i32,
     unclaimed_hotels: i32,
-    spaces: VecDeque<Rc<RefCell<Space>>>,
+    spaces: Vec<Rc<RefCell<Space>>>,
     players: Vec<Rc<RefCell<Player>>>,
+    player_turn: usize, // index into playerss
 }
 
 impl Board {
@@ -57,14 +74,61 @@ impl Board {
         Board {
             unclaimed_houses: TOTAL_NUM_HOUSES,
             unclaimed_hotels: TOTAL_NUM_HOTELS,
-            spaces: VecDeque::with_capacity(NUM_SPACES),
+            spaces: Vec::with_capacity(NUM_SPACES),
             players: Vec::new(),
+            player_turn: 0,
         }
     }
     
     /// Update the current state of the game
     pub fn update_game_state(&mut self) {
+        println!("It is {}'s turn", self.players[self.player_turn]
+                                    .borrow().get_name());
+        println!("Please enter a command: roll, quit, assets");
+        print!(">> ");
+        let action = get_turn_action();
+        match action {
+            Turn::Roll => {
+                let mut player = self.players[self.player_turn].clone();
+                let dice_roll = get_dice_roll() as usize;
+                let new_index = self.get_index(player.borrow()
+                    .get_space() + dice_roll);
+                println!("{} rolled a {}.",
+                         player.borrow().get_name(),
+                         dice_roll);
+                let result = player.borrow_mut().land(&self.spaces, new_index);
+                match result {
+                    LandAction::Purchase(ref prop) => {
+                        let mut property = prop.borrow_mut();
+                        property.purchase(player);
+                    },
+                    _ => (),
+                }
+                self.advance_to_next_turn();
+            },
+            Turn::Quit => {
+                print!("Are you sure you want to quit? ");
+                if confirm_prompt() {
+                    process::exit(0);
+                }
+            },
+            Turn::GetAssets => {
+                let player = self.players[self.player_turn].borrow();
+                println!("{} has ${} and the following assets:",
+                        player.get_name(), player.get_cash());
+                player.print_assets();
+            },
+        };
+        println!("");
         
+    }
+    
+    fn advance_to_next_turn(&mut self) {
+        self.player_turn = self.get_next_turn(self.player_turn + 1);
+    }
+    
+    fn get_index(&mut self, index: usize) -> usize {
+        index % NUM_SPACES
     }
 
     fn fill_spaces(&mut self) {
@@ -224,46 +288,46 @@ impl Board {
                                    
                                    
         
-        self.spaces.push_back(Rc::new(RefCell::new(go)));
-        self.spaces.push_back(Rc::new(RefCell::new(med_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(comm_chest_bot)));
-        self.spaces.push_back(Rc::new(RefCell::new(balt_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(income_tax)));
-        self.spaces.push_back(Rc::new(RefCell::new(reading_rr)));
-        self.spaces.push_back(Rc::new(RefCell::new(orient_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(chance_bot)));
-        self.spaces.push_back(Rc::new(RefCell::new(verm_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(conn_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(jail)));
-        self.spaces.push_back(Rc::new(RefCell::new(st_char_pl)));
-        self.spaces.push_back(Rc::new(RefCell::new(elec_util)));
-        self.spaces.push_back(Rc::new(RefCell::new(states_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(va_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(pa_rr)));
-        self.spaces.push_back(Rc::new(RefCell::new(st_james_pl)));
-        self.spaces.push_back(Rc::new(RefCell::new(comm_chest_left)));
-        self.spaces.push_back(Rc::new(RefCell::new(tn_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(ny_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(free_parking)));
-        self.spaces.push_back(Rc::new(RefCell::new(ky_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(chance_top)));
-        self.spaces.push_back(Rc::new(RefCell::new(in_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(il_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(bo_rr)));
-        self.spaces.push_back(Rc::new(RefCell::new(atl_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(ventnor_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(water_util)));
-        self.spaces.push_back(Rc::new(RefCell::new(mar_gard)));
-        self.spaces.push_back(Rc::new(RefCell::new(go_to_jail)));
-        self.spaces.push_back(Rc::new(RefCell::new(pac_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(nc_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(comm_chest_right)));
-        self.spaces.push_back(Rc::new(RefCell::new(pa_ave)));
-        self.spaces.push_back(Rc::new(RefCell::new(sl_rr)));
-        self.spaces.push_back(Rc::new(RefCell::new(chance_right)));
-        self.spaces.push_back(Rc::new(RefCell::new(park_pl)));
-        self.spaces.push_back(Rc::new(RefCell::new(luxury_tax)));
-        self.spaces.push_back(Rc::new(RefCell::new(bdwk)));
+        self.spaces.push(Rc::new(RefCell::new(go)));
+        self.spaces.push(Rc::new(RefCell::new(med_ave)));
+        self.spaces.push(Rc::new(RefCell::new(comm_chest_bot)));
+        self.spaces.push(Rc::new(RefCell::new(balt_ave)));
+        self.spaces.push(Rc::new(RefCell::new(income_tax)));
+        self.spaces.push(Rc::new(RefCell::new(reading_rr)));
+        self.spaces.push(Rc::new(RefCell::new(orient_ave)));
+        self.spaces.push(Rc::new(RefCell::new(chance_bot)));
+        self.spaces.push(Rc::new(RefCell::new(verm_ave)));
+        self.spaces.push(Rc::new(RefCell::new(conn_ave)));
+        self.spaces.push(Rc::new(RefCell::new(jail)));
+        self.spaces.push(Rc::new(RefCell::new(st_char_pl)));
+        self.spaces.push(Rc::new(RefCell::new(elec_util)));
+        self.spaces.push(Rc::new(RefCell::new(states_ave)));
+        self.spaces.push(Rc::new(RefCell::new(va_ave)));
+        self.spaces.push(Rc::new(RefCell::new(pa_rr)));
+        self.spaces.push(Rc::new(RefCell::new(st_james_pl)));
+        self.spaces.push(Rc::new(RefCell::new(comm_chest_left)));
+        self.spaces.push(Rc::new(RefCell::new(tn_ave)));
+        self.spaces.push(Rc::new(RefCell::new(ny_ave)));
+        self.spaces.push(Rc::new(RefCell::new(free_parking)));
+        self.spaces.push(Rc::new(RefCell::new(ky_ave)));
+        self.spaces.push(Rc::new(RefCell::new(chance_top)));
+        self.spaces.push(Rc::new(RefCell::new(in_ave)));
+        self.spaces.push(Rc::new(RefCell::new(il_ave)));
+        self.spaces.push(Rc::new(RefCell::new(bo_rr)));
+        self.spaces.push(Rc::new(RefCell::new(atl_ave)));
+        self.spaces.push(Rc::new(RefCell::new(ventnor_ave)));
+        self.spaces.push(Rc::new(RefCell::new(water_util)));
+        self.spaces.push(Rc::new(RefCell::new(mar_gard)));
+        self.spaces.push(Rc::new(RefCell::new(go_to_jail)));
+        self.spaces.push(Rc::new(RefCell::new(pac_ave)));
+        self.spaces.push(Rc::new(RefCell::new(nc_ave)));
+        self.spaces.push(Rc::new(RefCell::new(comm_chest_right)));
+        self.spaces.push(Rc::new(RefCell::new(pa_ave)));
+        self.spaces.push(Rc::new(RefCell::new(sl_rr)));
+        self.spaces.push(Rc::new(RefCell::new(chance_right)));
+        self.spaces.push(Rc::new(RefCell::new(park_pl)));
+        self.spaces.push(Rc::new(RefCell::new(luxury_tax)));
+        self.spaces.push(Rc::new(RefCell::new(bdwk)));
         
         
     }
@@ -293,14 +357,19 @@ impl Board {
 
         for (_, name) in turns_to_names {
             self.players.push(Rc::new(RefCell::new(
-                              Player::new(name, Space::Go(GO_SALARY)))));
+                              Player::new(name, 0))));
         }
         
         self.fill_spaces();
         self.players[0].borrow_mut().set_turn(true);
         
-        println!("Game setup complete.");
+        println!("Game setup complete.\n");
         
+    }
+    
+    /// Returns the index of the next turn
+    pub fn get_next_turn(&self, index: usize) -> usize {
+        index % self.players.len()
     }
 }
 
@@ -315,38 +384,61 @@ impl Draw for Board {
  *  UTILITY FUNCTIONS
  */
 
+ pub fn get_string() -> String {
+    let mut input = String::new();
+    io::stdout().flush();
+    io::stdin().read_line(&mut input).unwrap();
+    input
+ }
+ 
 /// Get a yes/no answer from stdin
 pub fn confirm_prompt() -> bool {
     loop {
-        let mut input = String::new();
-        io::stdout().flush();
-        io::stdin().read_line(&mut input).unwrap();
+        let mut input = get_string();
         match &(*input.trim().to_lowercase()) {
             "yes" => return true,
             "no"  => return false,
-            _ => println!("Please enter yes or no"),
+            _ => print!("Please enter yes or no: "),
+        }
+    }
+}
+
+pub fn get_turn_action() -> Turn {
+    loop {
+        let mut input = get_string();
+        match &(*input.trim().to_lowercase()) {
+            "roll" => return Turn::Roll,
+            "quit"  => return Turn::Quit,
+            "assets" => return Turn::GetAssets,
+            _ => print!("Please enter a valid command: "),
         }
     }
 }
 
 /// Get an integer from stdin
-pub fn get_num_players() -> u32 {
+pub fn get_int() -> i32 {
     use std::str::FromStr;
     
     loop {
         let mut input = String::new();
         io::stdout().flush();
         io::stdin().read_line(&mut input).unwrap();
-        match u32::from_str(&(input.trim())) {
-            Ok(n) => {
-                if n < 2 || n > MAX_NUM_PLAYERS {
-                    println!("Number of players must be >= 2 and <= {}",
-                             MAX_NUM_PLAYERS);
-                } else {
-                    return n;
-                }
-            },
-            Err(e) => println!("Please enter an integer"),
+        match i32::from_str(&(input.trim())) {
+            Ok(n) => return n,
+            Err(e) => print!("Please enter an integer: "),
+        }
+    }
+}
+
+/// Get the desired number of players
+pub fn get_num_players() -> i32 {
+    loop {
+        let n = get_int();
+        if n < 2 || n > MAX_NUM_PLAYERS {
+            print!("Number of players must be >= 2 and <= {}: ",
+                     MAX_NUM_PLAYERS);
+        } else {
+            return n;
         }
     }
 }
