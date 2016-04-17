@@ -24,6 +24,7 @@ pub enum ColorGroup {
     DarkBlue,
     Railroad,
     Utility,
+    Space
 }
 
 #[derive(Debug)]

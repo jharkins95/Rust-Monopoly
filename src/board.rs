@@ -21,8 +21,9 @@ use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL, Texture};
 use std::path::Path;
 
-use super::player::{Player, LandAction};
+use super::player::*;
 use super::property::{Property, ColorGroup};
+use super::ui::*;
 
 const TOTAL_NUM_HOUSES: i32 = 32;
 const TOTAL_NUM_HOTELS: i32 = 12;
@@ -44,10 +45,8 @@ pub trait Render {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs);
 }
 
-/// Represents a space on the board that players can land on
-/// (not necessarily a property)
 #[derive(Debug)]
-pub enum Space {
+pub enum SpaceEnum {
     Prop(Rc<RefCell<Property>>),
     Go(i32),
     Chance,
@@ -59,14 +58,48 @@ pub enum Space {
     LuxuryTax(i32),
 }
 
+/// Represents a space on the board that players can land on
+/// (not necessarily a property)
+#[derive(Debug)]
+pub struct Space {
+    
+    s_type: SpaceEnum,
+    x: i32,
+    y: i32,
+}
+
+impl Space {
+    pub fn new(prop: SpaceEnum, x: i32, y: i32) -> Space {
+        Space {
+            s_type: prop,
+            x: x,
+            y: y,
+        }
+    }
+    
+    pub fn get_type(&self) -> &SpaceEnum {
+        &(self.s_type)
+    }
+    
+    pub fn get_x(&self) -> i32 {
+        self.x
+    }
+    
+    pub fn get_y(&self) -> i32 {
+        self.y
+    }
+}
+
 impl Render for Space {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
+    /*
         match *self {
             Space::Prop(ref property) => {
                 property.borrow().render(gl, args);
             },
             _ => (),
         };
+        */
         println!("Drew a space");
     }
 }
@@ -96,7 +129,7 @@ impl Board {
             spaces: Vec::with_capacity(NUM_SPACES),
             players: Vec::new(),
             player_turn: 0,
-            image: Texture::from_path(Path::new("../../res/board.png")).unwrap()
+            image: Texture::from_path(Path::new("res/board.png")).unwrap()
         }
     }
     
@@ -104,6 +137,8 @@ impl Board {
     pub fn update_game_state(&mut self) {
         println!("It is {}'s turn", self.players[self.player_turn]
                                     .borrow().get_name());
+        self.players[self.player_turn].borrow_mut()
+            .set_turn(true);
         println!("Please enter a command: roll, quit, assets");
         print!(">> ");
         let action = get_turn_action();
@@ -140,6 +175,8 @@ impl Board {
             },
         };
         println!("");
+        self.players[self.player_turn].borrow_mut()
+            .set_turn(false);
         
     }
     
@@ -152,159 +189,159 @@ impl Board {
     }
 
     fn fill_spaces(&mut self) {
-        let go = Space::Go(GO_SALARY);
-        let chance_bot = Space::Chance;
-        let chance_top = Space::Chance;
-        let chance_right = Space::Chance;
-        let comm_chest_bot = Space::CommunityChest;
-        let comm_chest_left = Space::CommunityChest;
-        let comm_chest_right = Space::CommunityChest;
-        let jail = Space::Jail;
-        let free_parking = Space::FreeParking;
-        let go_to_jail = Space::GoToJail;
-        let income_tax = Space::IncomeTax(200);
-        let luxury_tax = Space::LuxuryTax(75);
+        let go = Space::new(SpaceEnum::Go(GO_SALARY), 522, 520);
+        let chance_bot = Space::new(SpaceEnum::Chance, 183, 520);
+        let chance_top = Space::new(SpaceEnum::Chance, 135, 4);
+        let chance_right = Space::new(SpaceEnum::Chance, 522, 327);
+        let comm_chest_bot = Space::new(SpaceEnum::CommunityChest, 426, 520);
+        let comm_chest_left = Space::new(SpaceEnum::CommunityChest, 4, 182);
+        let comm_chest_right = Space::new(SpaceEnum::CommunityChest, 522, 181);
+        let jail = Space::new(SpaceEnum::Jail, 522, 520);
+        let free_parking = Space::new(SpaceEnum::FreeParking, 4, 4);
+        let go_to_jail = Space::new(SpaceEnum::GoToJail, 522, 4);
+        let income_tax = Space::new(SpaceEnum::IncomeTax(200), 328, 520);
+        let luxury_tax = Space::new(SpaceEnum::LuxuryTax(75), 522, 424);
         
-        let med_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+        let med_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Mediterranean Avenue".to_string(),
                                   60,
                                   2,
-                                  ColorGroup::DarkPurple))));
-        let balt_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::DarkPurple)))), 472, 520);
+        let balt_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Baltic Avenue".to_string(),
                                   60,
                                   4,
-                                  ColorGroup::DarkPurple))));    
-        let reading_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::DarkPurple)))), 376, 520);    
+        let reading_rr = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Reading Railroad".to_string(),
                                   150,
                                   25,
-                                  ColorGroup::Railroad))));    
-        let orient_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Railroad)))), 280, 520);    
+        let orient_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Oriental Avenue".to_string(),
                                   100,
                                   6,
-                                  ColorGroup::LightBlue))));     
-        let verm_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::LightBlue)))), 231, 520);     
+        let verm_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Vermont Avenue".to_string(),
                                   100,
                                   6,
-                                  ColorGroup::LightBlue))));          
-        let conn_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::LightBlue)))), 134, 520);          
+        let conn_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Connecticut Avenue".to_string(),
                                   120,
                                   8,
-                                  ColorGroup::LightBlue))));   
-        let st_char_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::LightBlue)))), 88, 520);   
+        let st_char_pl = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "St. Charles Place".to_string(),
                                   140,
                                   10,
-                                  ColorGroup::LightPurple))));         
-        let states_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::LightPurple)))), 4, 472);         
+        let states_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "States Avenue".to_string(),
                                   140,
                                   10,
-                                  ColorGroup::LightPurple))));   
-        let va_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::LightPurple)))), 4, 376);   
+        let va_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Virginia Avenue".to_string(),
                                   160,
                                   12,
-                                  ColorGroup::LightPurple))));       
-        let pa_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::LightPurple)))), 4, 327);       
+        let pa_rr = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Pennsylvania Railroad".to_string(),
                                   150,
                                   25,
-                                  ColorGroup::Railroad))));   
-        let st_james_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Railroad)))), 4, 280);   
+        let st_james_pl = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "St. James Place".to_string(),
                                   180,
                                   14,
-                                  ColorGroup::Orange))));      
-        let tn_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Orange)))), 4, 230);      
+        let tn_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Tennessee Avenue".to_string(),
                                   180,
                                   14,
-                                  ColorGroup::Orange))));       
-        let ny_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Orange)))), 4, 133);       
+        let ny_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "New York Avenue".to_string(),
                                   200,
                                   16,
-                                  ColorGroup::Orange))));     
-        let ky_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Orange)))), 4, 85);     
+        let ky_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Kentucky Avenue".to_string(),
                                   220,
                                   18,
-                                  ColorGroup::Red))));     
-        let in_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Red)))), 88, 4);     
+        let in_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Indiana Avenue".to_string(),
                                   220,
                                   18,
-                                  ColorGroup::Red))));       
-        let il_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Red)))), 184, 4);       
+        let il_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Illinois Avenue".to_string(),
                                   240,
                                   20,
-                                  ColorGroup::Red))));       
-        let bo_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Red)))), 232, 4);       
+        let bo_rr = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "B&O Railroad".to_string(),
                                   150,
                                   25,
-                                  ColorGroup::Railroad))));                                   
-        let atl_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Railroad)))), 280, 4);                                   
+        let atl_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Atlantic Avenue".to_string(),
                                   260,
                                   22,
-                                  ColorGroup::DarkPurple))));      
-        let ventnor_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::DarkPurple)))), 328, 4);      
+        let ventnor_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Ventnor Avenue".to_string(),
                                   260,
                                   22,
-                                  ColorGroup::Yellow))));      
-        let mar_gard = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Yellow)))), 377, 4);      
+        let mar_gard = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Marvin Gardens".to_string(),
                                   280,
                                   22,
-                                  ColorGroup::Yellow))));      
-        let pac_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Yellow)))), 474, 4);      
+        let pac_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Pacific Avenue".to_string(),
                                   300,
                                   26,
-                                  ColorGroup::Green))));     
-        let nc_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Green)))), 522, 85);     
+        let nc_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "North Carolina Avenue".to_string(),
                                   300,
                                   26,
-                                  ColorGroup::Green))));       
-        let pa_ave = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Green)))), 522, 133);       
+        let pa_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Pennsylvania Avenue".to_string(),
                                   320,
                                   28,
-                                  ColorGroup::Green))));    
-        let sl_rr = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Green)))), 522, 230);    
+        let sl_rr = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Short Line".to_string(),
                                   150,
                                   25,
-                                  ColorGroup::Railroad))));      
-        let park_pl = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Railroad)))), 522, 279);      
+        let park_pl = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Park Place".to_string(),
                                   350,
                                   35,
-                                  ColorGroup::DarkBlue)))); 
-        let bdwk = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::DarkBlue)))), 522, 375); 
+        let bdwk = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Boardwalk".to_string(),
                                   400,
                                   50,
-                                  ColorGroup::DarkBlue))));      
-        let elec_util = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::DarkBlue)))), 522, 472);      
+        let elec_util = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Electric Company".to_string(),
                                   150,
                                   8,
-                                  ColorGroup::Utility))));   
-        let water_util = Space::Prop(Rc::new(RefCell::new(Property::new(
+                                  ColorGroup::Utility)))), 4, 424);   
+        let water_util = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Water Works".to_string(),
                                   150,
                                   8,
-                                  ColorGroup::Utility))));                                   
+                                  ColorGroup::Utility)))), 425, 4);                                   
                                    
                                    
         
@@ -360,24 +397,37 @@ impl Board {
         print!("How many players today? ");
         
         let num_players = get_num_players();
+        let mut available_colors = vec![true, true, true, true, true, true];
+        let colors = vec![RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE];
         
-        let mut turns_to_names: BTreeMap<i32, String> = BTreeMap::new();
-
+        let mut turns_to_players: BTreeMap<i32, Player> 
+            = BTreeMap::new();
         for i in 0..num_players {
-            println!("Please enter Player {}'s name: ", i + 1);
-            let mut name = String::new();
-            io::stdin().read_line(&mut name).unwrap();
+            print!("Please enter Player {}'s name: ", i + 1);
+            let mut name = get_string();
             
+            let mut color;
+            print!("Choose a color (ROYGBV): ");
+            loop {
+                color = get_token_color();
+                if available_colors[color] {
+                    available_colors[color] = false;
+                    break;
+                } else {
+                    print!("That color is already chosen! Pick another color: ");
+                }
+            }
             let mut n = get_dice_roll();
-            while turns_to_names.contains_key(&n) {
+            while turns_to_players.contains_key(&n) {
                 n = get_dice_roll();
             }
-            turns_to_names.insert(n, name.trim().to_string());
+            
+            turns_to_players.insert(
+              n, Player::new(name.trim().to_string(), 0, colors[color]));
         }
 
-        for (_, name) in turns_to_names {
-            self.players.push(Rc::new(RefCell::new(
-                              Player::new(name, 0))));
+        for (_, player) in turns_to_players {
+            self.players.push(Rc::new(RefCell::new(player)));
         }
         
         self.fill_spaces();
@@ -422,12 +472,27 @@ impl Render for Board {
  *  UTILITY FUNCTIONS
  */
 
- pub fn get_string() -> String {
-    let mut input = String::new();
-    io::stdout().flush();
-    io::stdin().read_line(&mut input).unwrap();
-    input
- }
+pub fn get_token_color() -> usize {
+    loop {
+        let mut color = get_string();
+        match &(*color.trim().to_lowercase()) {
+            "red" => return 0,
+            "orange" => return 1,
+            "yellow" => return 2,
+            "green" => return 3,
+            "blue" => return 4,
+            "purple" => return 5,
+            _ => print!("Please enter a valid color: "),
+        };
+    }
+}
+ 
+pub fn get_string() -> String {
+   let mut input = String::new();
+   io::stdout().flush();
+   io::stdin().read_line(&mut input).unwrap();
+   input
+}
  
 /// Get a yes/no answer from stdin
 pub fn confirm_prompt() -> bool {

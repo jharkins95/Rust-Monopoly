@@ -13,8 +13,8 @@ use opengl_graphics::{GlGraphics, OpenGL};
 use super::board::{Board, Render};
 
 
-const WINDOW_WIDTH: u32 = 600;
-const WINDOW_HEIGHT: u32 = 600;
+pub const WINDOW_WIDTH: u32 = 600;
+pub const WINDOW_HEIGHT: u32 = 600;
 
 pub struct Ui {
     main_window: GlutinWindow,
@@ -43,9 +43,7 @@ impl Ui {
         while let Some(e) = events.next(&mut self.main_window) {
             board.lock().unwrap().update_game_state();
             
-            if let Some(r) = e.render_args() {
-                board.lock().unwrap().render(&mut self.gl, &r);
-            }
+            board.lock().unwrap().render(&mut self.gl, &(e.render_args().unwrap()));
             
             if let Some(Button::Mouse(button)) = e.press_args() {
                 //println!("Pressed mouse button {:?}", button);

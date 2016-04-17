@@ -11,6 +11,15 @@ use opengl_graphics::{GlGraphics, OpenGL};
 
 const STARTING_CASH: i32 = 1500;
 
+pub const WHITE:  [f32; 4] = [1.0; 4];
+pub const RED:    [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+pub const ORANGE: [f32; 4] = [1.0, 153.0/255.0, 0.0, 1.0];
+pub const YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
+pub const GREEN:  [f32; 4] = [0.0, 1.0, 0.0, 1.0];
+pub const BLUE:   [f32; 4] = [0.0, 0.0, 1.0, 1.0];
+pub const PURPLE: [f32; 4] = [102.0/255.0, 0.0, 51.0/255.0, 1.0];
+
+
 #[derive(Debug)]
 pub enum LandAction {
     Rent,
@@ -22,6 +31,12 @@ pub enum LandAction {
 }
 
 #[derive(Debug)]
+pub enum PlayerToken {
+    Red,
+    Orange
+}
+
+#[derive(Debug)]
 pub struct Player {
     name: String,
     cash: i32,
@@ -29,10 +44,14 @@ pub struct Player {
     has_turn: bool,
     space: usize, // index into spaces array in Board
     properties: Vec<Rc<RefCell<Property>>>,
+    token_color: [f32; 4],
+    x: i32,
+    y: i32,
 }
 
 impl Player {
-    pub fn new(name: String, start_space: usize) -> Player {
+    pub fn new(name: String, start_space: usize,
+                token_color: [f32; 4]) -> Player {
         Player {
             name: name,
             cash: STARTING_CASH,
@@ -40,6 +59,9 @@ impl Player {
             has_turn: false,
             space: start_space,
             properties: Vec::new(),
+            token_color: token_color,
+            x: 0,
+            y: 0,
         }
     }
 
@@ -48,8 +70,10 @@ impl Player {
                 
         let space = spaces[index].borrow();
         self.space = index;
-        match *space {
-            Space::Prop(ref property) => {
+        self.x = spaces[index].borrow().get_x();
+        self.y = spaces[index].borrow().get_y();
+        match *(space.get_type()) {
+            SpaceEnum::Prop(ref property) => {
                 if property.borrow().is_owned() {
                     if self.properties.contains(property) {
                         let property = property.borrow();
@@ -86,28 +110,28 @@ impl Player {
                     }
                 }
             },
-            Space::Go(salary) => {
+            SpaceEnum::Go(salary) => {
                 println!("You landed on GO! Collect ${}.", salary);
                 self.cash += salary;
             },
-            Space::Chance => {println!("Landed on Chance");},
-            Space::CommunityChest => {println!("Landed on CC");},
-            Space::Jail => println!("Just visiting..."),
-            Space::FreeParking => {
+            SpaceEnum::Chance => {println!("Landed on Chance");},
+            SpaceEnum::CommunityChest => {println!("Landed on CC");},
+            SpaceEnum::Jail => println!("Just visiting..."),
+            SpaceEnum::FreeParking => {
                 println!("Landed on Free Parking");
             },
-            Space::GoToJail => {
+            SpaceEnum::GoToJail => {
                 println!("Go to jail! Go directly to jail! Do not pass\
                           GO! Do not collect ${}!", GO_SALARY);
                 self.space = 10;
                 self.jail();
                 return LandAction::Space;
             },
-            Space::IncomeTax(tax) => {
+            SpaceEnum::IncomeTax(tax) => {
                 println!("INCOME TAX! Pay 10% or ${}", tax);
                 self.cash -= tax;  // TODO: choose between 10% or tax
             },
-            Space::LuxuryTax(tax) => {
+            SpaceEnum::LuxuryTax(tax) => {
                 println!("Pay LUXURY TAX of {}!", tax);
                 self.cash -= tax;
             },
@@ -154,7 +178,15 @@ impl Player {
 
 impl Render for Player {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
-        println!("Drew a player");
+        use graphics::*;
+        
+        let token = rectangle::square(self.x as f64, self.y as f64, 5.0);
+
+        gl.draw(args.viewport(), |c, gl| {
+            let transform = c.transform;
+            rectangle(self.token_color, token, transform, gl);
+        });
+        //println!("Drew a player");
     }
 }
 
