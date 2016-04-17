@@ -5,6 +5,7 @@ extern crate opengl_graphics;
 extern crate rand;
 
 use std::thread;
+use std::sync::{Arc, Mutex};
 use piston::window::WindowSettings;
 use piston::event_loop::*;
 use piston::input::*;
@@ -15,9 +16,7 @@ pub mod board;
 pub mod player;
 pub mod property;
 pub mod cards;
-
-const WINDOW_WIDTH: u32 = 640;
-const WINDOW_HEIGHT: u32 = 480;
+pub mod ui;
 
 pub struct App {
     x: i32,
@@ -47,49 +46,8 @@ impl App {
 }
 
 fn main() {
-    // Change this to OpenGL::V2_1 if not working.
-    let opengl = OpenGL::V3_2;
-
-    // Create an Glutin window.
-    let mut window: Window = WindowSettings::new(
-            "Monopoly",
-            [WINDOW_WIDTH, WINDOW_HEIGHT]
-        )
-        .opengl(opengl)
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
-
-    // Create a new game and run it.
-    let mut app = App {
-        x: 0,
-        y: 0,
-    };
-    
-    let mut gl = GlGraphics::new(opengl);
-    
-    let mut board = board::Board::new();
-    board.setup_game();
-    
-    let mut cursor = [0.0, 0.0];
-
-    // Main event loop
-    let mut events = window.events();
-    while let Some(e) = events.next(&mut window) {
-        if let Some(Button::Mouse(button)) = e.press_args() {
-            println!("Pressed mouse button {:?}", button);
-        }
-        
-        e.mouse_cursor(|x, y| {
-            app.x = x as i32;
-            app.y = y as i32;
-            println!("Mouse moved {}, {}", x, y);
-        });
-        
-        board.update_game_state();
-    
-        if let Some(r) = e.render_args() {
-            app.render(&mut gl, &r);
-        }
-    }
+    let mut ui = ui::Ui::new();
+    let mut board = Arc::new(Mutex::new(board::Board::new()));
+    board.lock().unwrap().setup_game();
+    ui.run(board.clone());
 }

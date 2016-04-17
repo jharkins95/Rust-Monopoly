@@ -1,6 +1,13 @@
 use std::rc::{Rc, Weak};
 use std::cell::RefCell;
+use super::board::{Board, Render};
 use player::Player;
+
+use piston::window::WindowSettings;
+use piston::event_loop::*;
+use piston::input::*;
+use glutin_window::GlutinWindow as Window;
+use opengl_graphics::{GlGraphics, OpenGL};
 
 const MAX_NUM_HOUSES: i32 = 4;
 const MAX_NUM_HOTELS: i32 = 1;
@@ -122,6 +129,12 @@ impl Property {
     
     pub fn purchase(&mut self, owner: Rc<RefCell<Player>>) {
         self.owner = Some(owner);
+    }
+}
+
+impl Render for Property {
+    fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
+        println!("Drew a property");
     }
 }
 

@@ -1,4 +1,6 @@
 extern crate rand;
+extern crate graphics;
+extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate piston;
 extern crate core;
@@ -12,8 +14,12 @@ use std::process;
 use std::fmt;
 use std::cell::RefCell;
 use rand::Rng;
-use opengl_graphics::{GlGraphics, OpenGL};
+use piston::window::WindowSettings;
+use piston::event_loop::*;
 use piston::input::*;
+use glutin_window::GlutinWindow as Window;
+use opengl_graphics::{GlGraphics, OpenGL, Texture};
+use std::path::Path;
 
 use super::player::{Player, LandAction};
 use super::property::{Property, ColorGroup};
@@ -34,8 +40,8 @@ pub enum Turn {
 
 /// Objects that can be drawn to the screen with
 /// the Piston/OpenGL framework
-pub trait Draw {
-    fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs);
+pub trait Render {
+    fn render(&self, gl: &mut GlGraphics, args: &RenderArgs);
 }
 
 /// Represents a space on the board that players can land on
@@ -53,6 +59,18 @@ pub enum Space {
     LuxuryTax(i32),
 }
 
+impl Render for Space {
+    fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
+        match *self {
+            Space::Prop(ref property) => {
+                property.borrow().render(gl, args);
+            },
+            _ => (),
+        };
+        println!("Drew a space");
+    }
+}
+
 impl fmt::Display for Space {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "")
@@ -60,13 +78,14 @@ impl fmt::Display for Space {
 }
 
 /// A Board contains all useful game state (players, spaces, properties)
-#[derive(Debug)]
+//#[derive(Debug)]
 pub struct Board {
     unclaimed_houses: i32,
     unclaimed_hotels: i32,
     spaces: Vec<Rc<RefCell<Space>>>,
     players: Vec<Rc<RefCell<Player>>>,
     player_turn: usize, // index into playerss
+    image: Texture,
 }
 
 impl Board {
@@ -77,6 +96,7 @@ impl Board {
             spaces: Vec::with_capacity(NUM_SPACES),
             players: Vec::new(),
             player_turn: 0,
+            image: Texture::from_path(Path::new("../../res/board.png")).unwrap()
         }
     }
     
@@ -373,9 +393,27 @@ impl Board {
     }
 }
 
-impl Draw for Board {
-    fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
-        unimplemented!();
+impl Render for Board {
+    fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
+        use graphics::*;
+        const WHITE: [f32; 4] = [1.0; 4];
+        const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
+        const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+    
+        gl.draw(args.viewport(), |c, gl| {
+            clear(WHITE, gl);
+            let transform = c.transform.trans(0.0, 0.0);
+            image(&(self.image), transform, gl);
+        });
+        
+        for space in &(self.spaces) {
+            space.borrow().render(gl, args);
+        }
+        
+        for player in &(self.players) {
+            player.borrow().render(gl, args);
+        }
+        println!("Drew the board");
     }
 }
 

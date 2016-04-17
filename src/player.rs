@@ -3,6 +3,11 @@ use std::rc::{Rc, Weak};
 use std::cell::RefCell;
 use super::property::Property;
 use super::board::*;
+use piston::window::WindowSettings;
+use piston::event_loop::*;
+use piston::input::*;
+use glutin_window::GlutinWindow as Window;
+use opengl_graphics::{GlGraphics, OpenGL};
 
 const STARTING_CASH: i32 = 1500;
 
@@ -42,7 +47,7 @@ impl Player {
                 &Vec<Rc<RefCell<Space>>>, index: usize) -> LandAction {
                 
         let space = spaces[index].borrow();
-        //self.space = index;
+        self.space = index;
         match *space {
             Space::Prop(ref property) => {
                 if property.borrow().is_owned() {
@@ -144,6 +149,12 @@ impl Player {
         let rent = property.get_rent().unwrap() as i32;
         self.cash += rent;
         other.cash -= rent;
+    }
+}
+
+impl Render for Player {
+    fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
+        println!("Drew a player");
     }
 }
 
