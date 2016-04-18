@@ -5,20 +5,14 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate core;
 
-use std;
-use std::io::{self, Read, Write};
-use std::collections::VecDeque;
+use std::io::{self, Write};
 use std::collections::BTreeMap;
 use std::rc::Rc;
-use std::process;
 use std::fmt;
 use std::cell::RefCell;
 use rand::Rng;
-use piston::window::WindowSettings;
-use piston::event_loop::*;
 use piston::input::*;
-use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{GlGraphics, OpenGL, Texture};
+use opengl_graphics::{GlGraphics, Texture};
 use std::path::Path;
 
 use super::player::*;
@@ -30,14 +24,6 @@ const TOTAL_NUM_HOTELS: i32 = 12;
 const NUM_SPACES: usize = 40;
 const MAX_NUM_PLAYERS: i32 = 6;
 pub const GO_SALARY: i32 = 200;
-
-/// Represents a player's choice on their turn
-pub enum Turn {
-    Roll,
-    Quit,
-    GetAssets,
-    // TODO: add more types of actions (trades, buy/sell houses)
-}
 
 /// Objects that can be drawn to the screen with
 /// the Piston/OpenGL framework
@@ -100,7 +86,7 @@ impl Render for Space {
             _ => (),
         };
         */
-        println!("Drew a space");
+        //println!("Drew a space");
     }
 }
 
@@ -133,17 +119,40 @@ impl Board {
         }
     }
     
-    /// Update the current state of the game
-    pub fn update_game_state(&mut self) {
+    pub fn get_command(&mut self) -> TurnCommand {
         println!("It is {}'s turn", self.players[self.player_turn]
                                     .borrow().get_name());
         self.players[self.player_turn].borrow_mut()
             .set_turn(true);
         println!("Please enter a command: roll, quit, assets");
         print!(">> ");
-        let action = get_turn_action();
+        get_turn_action()
+    }
+    
+    pub fn roll_and_land(&mut self) {
+        let mut player = self.players[self.player_turn].clone();
+        let dice_roll = get_dice_roll() as usize;
+        let new_index = self.get_index(player.borrow()
+            .get_space() + dice_roll);
+        println!("{} rolled a {}.",
+                 player.borrow().get_name(),
+                 dice_roll);
+        let result = player.borrow_mut().land(&self.spaces, new_index);
+        match result {
+            LandAction::Purchase(ref prop) => {
+                let mut property = prop.borrow_mut();
+                property.purchase(player);
+            },
+            _ => (),
+        }
+    }
+  
+    /*  
+    /// Update the current state of the game
+    pub fn update_game_state(&mut self) {
+
         match action {
-            Turn::Roll => {
+            TurnCommand::Roll => {
                 let mut player = self.players[self.player_turn].clone();
                 let dice_roll = get_dice_roll() as usize;
                 let new_index = self.get_index(player.borrow()
@@ -161,13 +170,13 @@ impl Board {
                 }
                 self.advance_to_next_turn();
             },
-            Turn::Quit => {
+            TurnCommand::Quit => {
                 print!("Are you sure you want to quit? ");
                 if confirm_prompt() {
                     process::exit(0);
                 }
             },
-            Turn::GetAssets => {
+            TurnCommand::Assets => {
                 let player = self.players[self.player_turn].borrow();
                 println!("{} has ${} and the following assets:",
                         player.get_name(), player.get_cash());
@@ -180,11 +189,20 @@ impl Board {
         
     }
     
-    fn advance_to_next_turn(&mut self) {
+    */
+    
+    pub fn print_player_assets(&self) {
+        let player = self.players[self.player_turn].borrow();
+        println!("{} has ${} and the following assets:",
+                player.get_name(), player.get_cash());
+        player.print_assets();
+    }
+    
+    pub fn advance_to_next_turn(&mut self) {
         self.player_turn = self.get_next_turn(self.player_turn + 1);
     }
     
-    fn get_index(&mut self, index: usize) -> usize {
+    pub fn get_index(&mut self, index: usize) -> usize {
         index % NUM_SPACES
     }
 
@@ -438,7 +456,7 @@ impl Board {
     }
     
     /// Returns the index of the next turn
-    pub fn get_next_turn(&self, index: usize) -> usize {
+    fn get_next_turn(&self, index: usize) -> usize {
         index % self.players.len()
     }
 }
@@ -463,7 +481,7 @@ impl Render for Board {
         for player in &(self.players) {
             player.borrow().render(gl, args);
         }
-        println!("Drew the board");
+        //println!("Drew the board");
     }
 }
 
@@ -506,13 +524,13 @@ pub fn confirm_prompt() -> bool {
     }
 }
 
-pub fn get_turn_action() -> Turn {
+pub fn get_turn_action() -> TurnCommand {
     loop {
         let mut input = get_string();
         match &(*input.trim().to_lowercase()) {
-            "roll" => return Turn::Roll,
-            "quit"  => return Turn::Quit,
-            "assets" => return Turn::GetAssets,
+            "roll" => return TurnCommand::Roll,
+            "quit"  => return TurnCommand::Quit,
+            "assets" => return TurnCommand::Assets,
             _ => print!("Please enter a valid command: "),
         }
     }

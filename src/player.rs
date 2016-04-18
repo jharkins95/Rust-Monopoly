@@ -1,13 +1,10 @@
-use std;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 use std::cell::RefCell;
-use super::property::Property;
-use super::board::*;
-use piston::window::WindowSettings;
-use piston::event_loop::*;
 use piston::input::*;
-use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{GlGraphics, OpenGL};
+use opengl_graphics::GlGraphics;
+
+use super::property::*;
+use super::board::*;
 
 const STARTING_CASH: i32 = 1500;
 
