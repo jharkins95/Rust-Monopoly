@@ -8,14 +8,21 @@ use std::process;
 use piston::window::WindowSettings;
 use piston::event_loop::*;
 use piston::input::*;
+use std::rc::Rc;
+use std::cell::RefCell;
 use opengl_graphics::{GlGraphics, OpenGL};
 
 use super::board::*;
 use super::player::*;
+use super::property::*;
 
 
 pub const WINDOW_WIDTH: u32 = 600;
 pub const WINDOW_HEIGHT: u32 = 600;
+
+const GO_SALARY: u32 = 200;
+const INCOME_TAX: u32 = 200;
+const LUXURY_TAX: u32 = 75;
 
 /// Represents the different stages in a player's turn
 #[derive(Debug, Clone, PartialEq)]
@@ -25,6 +32,7 @@ pub enum TurnState {
     ExecutingCommand,
     AfterCommand,
     ConfirmQuit,
+    ConfirmPurchase(Rc<RefCell<Property>>),
 }
 
 /// Represents a player's choice of action during their turn
@@ -78,6 +86,8 @@ impl Ui {
     pub fn setup_game(&mut self) {
         let mut input = String::new();
     
+        self.board.reset_spaces();
+        
         println!("Welcome to Monopoly!");
         print!("How many players today? ");
         
@@ -108,14 +118,12 @@ impl Ui {
             }
             
             turns_to_players.insert(
-              n, Player::new(name.trim().to_string(), 0, colors[color]));
+              n, Player::new(name.trim().to_string(), self.board.get_space(0), colors[color]));
         }
 
         for (_, player) in turns_to_players {
             self.board.add_player(player);
         }
-        
-        self.board.fill_spaces();
         
         println!("Game setup complete.\n");
         
@@ -137,36 +145,110 @@ impl Ui {
         //println!("Key pressed = {:?}", key);
         match key {
             Key::R => {
-                if self.turn_state = TurnState::WaitingForCommand {
+                if self.turn_state == TurnState::WaitingForCommand {
                     self.turn_state = TurnState::ExecutingCommand;
                     self.turn_command = Some(TurnCommand::Roll);
                 }
             },
             Key::Q => {
-                if self.turn_state = TurnState::WaitingForCommand {
+                if self.turn_state == TurnState::WaitingForCommand {
                     self.turn_state = TurnState::ExecutingCommand;
                     self.turn_command = Some(TurnCommand::Quit);
                 }
             },
             Key::Y => {
-                if self.turn_state == TurnState::ConfirmQuit {
-                    println!("Goodbye!");
-                    process::exit(0);
+                match self.turn_state.clone() {
+                    TurnState::ConfirmQuit => {
+                        println!("Goodbye!");
+                        process::exit(0);
+                    },
+                    TurnState::ConfirmPurchase(ref mut prop) => {
+                        self.board.on_purchase(prop.clone());
+                        self.turn_state = TurnState::AfterCommand;
+                        self.turn_command = None;
+                    },
+                    _ => (),
                 }
             },
             Key::N => {
-                if self.turn_state == TurnState::ConfirmQuit {
-                    self.turn_state = TurnState::WaitingForCommand;
-                    self.turn_command = None;
+                match self.turn_state {
+                    TurnState::ConfirmQuit => {
+                        self.turn_state = TurnState::WaitingForCommand;
+                        self.turn_command = None;
+                    },
+                    TurnState::ConfirmPurchase(_) => {
+                        self.turn_state = TurnState::AfterCommand;
+                        self.turn_command = None;
+                    },
+                    _ => (),
                 }
             },
             Key::A => {
-                if self.turn_state = TurnState::WaitingForCommand {
+                if self.turn_state == TurnState::WaitingForCommand {
                     self.turn_state = TurnState::ExecutingCommand;
                     self.turn_command = Some(TurnCommand::Assets);
                 }
             },
             _ => self.turn_command = None,
+        }
+    }
+    
+    pub fn handle_land_space(&mut self, space: Rc<RefCell<Space>>) {
+        let space = space.borrow();
+        let s_type = space.get_type();
+        match *s_type {
+            SpaceEnum::Prop(_) => unreachable!(),
+            SpaceEnum::Go => self.board.on_land_go(GO_SALARY),
+            SpaceEnum::Chance => self.board.on_land_chance(),
+            SpaceEnum::CommunityChest => self.board.on_land_comm_chest(),
+            SpaceEnum::Jail => self.board.on_land_jail(),
+            SpaceEnum::FreeParking => self.board.on_land_free_parking(),
+            SpaceEnum::GoToJail => self.board.on_land_go_to_jail(GO_SALARY),
+            SpaceEnum::IncomeTax => self.board.on_land_income_tax(INCOME_TAX),
+            SpaceEnum::LuxuryTax => self.board.on_land_luxury_tax(LUXURY_TAX),
+        }
+    }
+    
+    pub fn handle_land(&mut self, action: LandAction) {
+        match action {
+            LandAction::Rent(ref prop) => {
+                let property = prop.borrow();
+                let mut owner = property.get_owner().borrow_mut();
+                
+                println!("{} is owned by {}. Pay rent of ${}!", 
+                         property.get_name(),
+                         owner.get_name(), 
+                         property.get_rent().unwrap());
+                self.board.on_rent_collected(&mut *owner, &*property);
+                
+                self.turn_state = TurnState::AfterCommand;
+                self.turn_command = None;
+            },
+            LandAction::Own(ref prop) => {
+                println!("You already own {}.", prop.borrow().get_name());
+                
+                self.turn_state = TurnState::AfterCommand;
+                self.turn_command = None;
+            },
+            LandAction::InsFunds(ref prop) => {
+                println!("You don't have enough money to purchase {}!",
+                            prop.borrow().get_name());
+                            
+                self.turn_state = TurnState::AfterCommand;
+                self.turn_command = None;
+            },
+            LandAction::MightPurchase(ref prop) => {
+                println!("{} is not owned. Would you like to buy it?",
+                                 prop.borrow().get_name());
+                
+                self.turn_state = TurnState::ConfirmPurchase(prop.clone());
+                self.turn_command = None;
+            },
+            LandAction::Space(ref space) => {
+                self.handle_land_space(space.clone());
+                self.turn_state = TurnState::AfterCommand;
+                self.turn_command = None;
+            },
         }
     }
     
@@ -197,8 +279,8 @@ impl Ui {
                             if let Some(command) = self.turn_command.clone() {;
                                 match command {
                                     TurnCommand::Roll => {
-                                        self.board.roll_and_land();
-                                        self.turn_state = TurnState::AfterCommand;
+                                        let action = self.board.roll_and_land();
+                                        self.handle_land(action);
                                     },
                                     
                                     TurnCommand::Quit => {
