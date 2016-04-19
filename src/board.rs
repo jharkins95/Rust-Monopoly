@@ -119,14 +119,10 @@ impl Board {
         }
     }
     
-    pub fn get_command(&mut self) -> TurnCommand {
-        println!("It is {}'s turn", self.players[self.player_turn]
-                                    .borrow().get_name());
-        self.players[self.player_turn].borrow_mut()
-            .set_turn(true);
-        println!("Please enter a command: roll, quit, assets");
-        print!(">> ");
-        get_turn_action()
+    pub fn start_turn(&mut self) {
+        println!("It is {}'s turn. Please enter a command: roll, quit, assets", 
+            self.players[self.player_turn].borrow().get_name());
+        self.players[self.player_turn].borrow_mut().set_turn(true);
     }
     
     pub fn roll_and_land(&mut self) {
@@ -198,7 +194,9 @@ impl Board {
         player.print_assets();
     }
     
-    pub fn advance_to_next_turn(&mut self) {
+    pub fn end_turn(&mut self) {
+        self.players[self.player_turn].borrow_mut()
+            .set_turn(false);
         self.player_turn = self.get_next_turn(self.player_turn + 1);
     }
     
@@ -206,7 +204,7 @@ impl Board {
         index % NUM_SPACES
     }
 
-    fn fill_spaces(&mut self) {
+    pub fn fill_spaces(&mut self) {
         let go = Space::new(SpaceEnum::Go(GO_SALARY), 522, 520);
         let chance_bot = Space::new(SpaceEnum::Chance, 183, 520);
         let chance_top = Space::new(SpaceEnum::Chance, 135, 4);
@@ -402,57 +400,11 @@ impl Board {
         self.spaces.push(Rc::new(RefCell::new(chance_right)));
         self.spaces.push(Rc::new(RefCell::new(park_pl)));
         self.spaces.push(Rc::new(RefCell::new(luxury_tax)));
-        self.spaces.push(Rc::new(RefCell::new(bdwk)));
-        
-        
+        self.spaces.push(Rc::new(RefCell::new(bdwk)));  
     }
-
-    pub fn setup_game(&mut self) {
-        let mut input = String::new();
-        let mut num_players = 2; // default
     
-        println!("Welcome to Monopoly!");
-        print!("How many players today? ");
-        
-        let num_players = get_num_players();
-        let mut available_colors = vec![true, true, true, true, true, true];
-        let colors = vec![RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE];
-        
-        let mut turns_to_players: BTreeMap<i32, Player> 
-            = BTreeMap::new();
-        for i in 0..num_players {
-            print!("Please enter Player {}'s name: ", i + 1);
-            let mut name = get_string();
-            
-            let mut color;
-            print!("Choose a color (ROYGBV): ");
-            loop {
-                color = get_token_color();
-                if available_colors[color] {
-                    available_colors[color] = false;
-                    break;
-                } else {
-                    print!("That color is already chosen! Pick another color: ");
-                }
-            }
-            let mut n = get_dice_roll();
-            while turns_to_players.contains_key(&n) {
-                n = get_dice_roll();
-            }
-            
-            turns_to_players.insert(
-              n, Player::new(name.trim().to_string(), 0, colors[color]));
-        }
-
-        for (_, player) in turns_to_players {
-            self.players.push(Rc::new(RefCell::new(player)));
-        }
-        
-        self.fill_spaces();
-        self.players[0].borrow_mut().set_turn(true);
-        
-        println!("Game setup complete.\n");
-        
+    pub fn add_player(&mut self, player: Player) {
+        self.players.push(Rc::new(RefCell::new(player)));
     }
     
     /// Returns the index of the next turn
@@ -464,12 +416,8 @@ impl Board {
 impl Render for Board {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
         use graphics::*;
-        const WHITE: [f32; 4] = [1.0; 4];
-        const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-        const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
     
         gl.draw(args.viewport(), |c, gl| {
-            clear(WHITE, gl);
             let transform = c.transform.trans(0.0, 0.0);
             image(&(self.image), transform, gl);
         });

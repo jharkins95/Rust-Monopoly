@@ -2,6 +2,7 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate glutin_window;
 
+use std::collections::BTreeMap;
 use glutin_window::GlutinWindow;
 use std::process;
 use piston::window::WindowSettings;
@@ -10,22 +11,25 @@ use piston::input::*;
 use opengl_graphics::{GlGraphics, OpenGL};
 
 use super::board::*;
+use super::player::*;
 
 
 pub const WINDOW_WIDTH: u32 = 600;
 pub const WINDOW_HEIGHT: u32 = 600;
 
-/// Represents the different points in a player's turn
-#[derive(Debug, Clone)]
+/// Represents the different stages in a player's turn
+#[derive(Debug, Clone, PartialEq)]
 pub enum TurnState {
+    StartTurn,
+    WaitingForCommand,
     ExecutingCommand,
     AfterCommand,
+    ConfirmQuit,
 }
 
-/// Represents a player's choice on their turn
-#[derive(Debug, Clone)]
+/// Represents a player's choice of action during their turn
+#[derive(Debug, Clone, PartialEq)]
 pub enum TurnCommand {
-    CommandNotReady,
     Roll,
     Quit,
     Assets,
@@ -33,9 +37,10 @@ pub enum TurnCommand {
 }
 
 /// Master game state: is the game running/set up/over?
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum GameState {
-    GameSetup,
+    GameGUISetup,
+    GameStateSetup,
     GameRun,
     GameOver,
 }
@@ -64,73 +69,160 @@ impl Ui {
             main_window: window,
             gl: GlGraphics::new(opengl),
             board: Board::new(),
-            game_state: GameState::GameSetup,
-            turn_state: TurnState::ExecutingCommand,
+            game_state: GameState::GameGUISetup,
+            turn_state: TurnState::StartTurn,
             turn_command: None,
         }
     }
     
-    pub fn set_turn_command_none(&mut self) {
-        self.turn_command = None;
+    pub fn setup_game(&mut self) {
+        let mut input = String::new();
+    
+        println!("Welcome to Monopoly!");
+        print!("How many players today? ");
+        
+        let num_players = get_num_players();
+        let mut available_colors = vec![true, true, true, true, true, true];
+        let colors = vec![RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE];
+        
+        let mut turns_to_players: BTreeMap<i32, Player> 
+            = BTreeMap::new();
+        for i in 0..num_players {
+            print!("Please enter Player {}'s name: ", i + 1);
+            let mut name = get_string();
+            
+            let mut color;
+            print!("Choose a color (ROYGBV): ");
+            loop {
+                color = get_token_color();
+                if available_colors[color] {
+                    available_colors[color] = false;
+                    break;
+                } else {
+                    print!("That color is already chosen! Pick another color: ");
+                }
+            }
+            let mut n = get_dice_roll();
+            while turns_to_players.contains_key(&n) {
+                n = get_dice_roll();
+            }
+            
+            turns_to_players.insert(
+              n, Player::new(name.trim().to_string(), 0, colors[color]));
+        }
+
+        for (_, player) in turns_to_players {
+            self.board.add_player(player);
+        }
+        
+        self.board.fill_spaces();
+        
+        println!("Game setup complete.\n");
+        
+    }
+    
+    /// Clear the screen
+    fn clear(&mut self, args: &RenderArgs) {
+        use graphics::*;
+        let ref mut gl = self.gl;
+        const WHITE: [f32; 4] = [1.0; 4];
+    
+        gl.draw(args.viewport(), |c, gl| {
+            clear(WHITE, gl);
+        });
     }
 
-    pub fn handle_key_input(&mut self, key: keyboard::Key) {
+    // Update the game state based on the key pressed
+    fn handle_key_input(&mut self, key: keyboard::Key) {
+        //println!("Key pressed = {:?}", key);
         match key {
-            Key::R => self.turn_command = Some(TurnCommand::Roll),
-            Key::Q => self.turn_command = Some(TurnCommand::Quit),
-            Key::A => self.turn_command = Some(TurnCommand::Assets),
+            Key::R => {
+                if self.turn_state = TurnState::WaitingForCommand {
+                    self.turn_state = TurnState::ExecutingCommand;
+                    self.turn_command = Some(TurnCommand::Roll);
+                }
+            },
+            Key::Q => {
+                if self.turn_state = TurnState::WaitingForCommand {
+                    self.turn_state = TurnState::ExecutingCommand;
+                    self.turn_command = Some(TurnCommand::Quit);
+                }
+            },
+            Key::Y => {
+                if self.turn_state == TurnState::ConfirmQuit {
+                    println!("Goodbye!");
+                    process::exit(0);
+                }
+            },
+            Key::N => {
+                if self.turn_state == TurnState::ConfirmQuit {
+                    self.turn_state = TurnState::WaitingForCommand;
+                    self.turn_command = None;
+                }
+            },
+            Key::A => {
+                if self.turn_state = TurnState::WaitingForCommand {
+                    self.turn_state = TurnState::ExecutingCommand;
+                    self.turn_command = Some(TurnCommand::Assets);
+                }
+            },
             _ => self.turn_command = None,
         }
     }
     
+    /// The main event loop
     pub fn run(&mut self) {
         let mut events = self.main_window.events();
         while let Some(e) = events.next(&mut self.main_window) {
+            //println!("Updated game state");
             match self.game_state {
-                GameState::GameSetup => {
+                GameState::GameGUISetup => {},
+            
+                GameState::GameStateSetup => {
                     // TODO: clear game window
-                    self.board.setup_game();
+                    self.setup_game();
                     self.game_state = GameState::GameRun;
                 },
                 
                 GameState::GameRun => {
                     match self.turn_state {
+                        TurnState::StartTurn => {
+                            self.board.start_turn();
+                            self.turn_state = TurnState::WaitingForCommand
+                        },
+                        TurnState::WaitingForCommand => {
+                        
+                        },
                         TurnState::ExecutingCommand => {
-                            match self.turn_command {
-                                None => (),
-                                Some(_) => {
-                                    let command = self.turn_command.clone();
-                                    match command.unwrap() {
-                                        TurnCommand::Roll => {
-                                            self.board.roll_and_land();
-                                            self.turn_state = TurnState::AfterCommand;
-                                        },
-                                        
-                                        TurnCommand::Quit => {
-                                            print!("Are you sure you want to quit? ");
-                                            if super::board::confirm_prompt() {
-                                                process::exit(0);
-                                            }
-                                            self.set_turn_command_none(); // if user didn't exit
-                                        },
-                                        
-                                        TurnCommand::Assets => {
-                                            self.board.print_player_assets();
-                                            self.set_turn_command_none();
-                                        },
-
-                                        _ => (),
-                                    };   
-                                },
+                            if let Some(command) = self.turn_command.clone() {;
+                                match command {
+                                    TurnCommand::Roll => {
+                                        self.board.roll_and_land();
+                                        self.turn_state = TurnState::AfterCommand;
+                                    },
+                                    
+                                    TurnCommand::Quit => {
+                                        println!("Are you sure you want to quit? ");
+                                        self.turn_state = TurnState::ConfirmQuit;
+                                    },
+                                    
+                                    TurnCommand::Assets => {
+                                        self.board.print_player_assets();
+                                        self.turn_state = TurnState::WaitingForCommand;
+                                    },
+                                };   
+                                self.turn_command = None;
                             };
                         },
                         
                         TurnState::AfterCommand => {
                             // TODO: handle bankruptcy here
-                            self.board.advance_to_next_turn();
-                            self.turn_state = TurnState::ExecutingCommand;
+                            self.board.end_turn();
+                            self.turn_state = TurnState::StartTurn;
                             self.turn_command = None;
                         },
+                        
+                        _ => (),
                     };
                 },
                 
@@ -140,7 +232,12 @@ impl Ui {
             }
             
             if let Some(r) = e.render_args() {
-                self.board.render(&mut self.gl, &r);
+                self.clear(&r);
+                if self.game_state == GameState::GameGUISetup {
+                    self.game_state = GameState::GameStateSetup;
+                } else {
+                    self.board.render(&mut self.gl, &r);
+                }
             }
             
             if let Some(Button::Keyboard(key)) = e.press_args() {
