@@ -17,7 +17,7 @@ use std::path::Path;
 
 use super::player::*;
 use super::property::{Property, ColorGroup};
-use super::ui::*;
+use super::game::*;
 
 const TOTAL_NUM_HOUSES: i32 = 32;
 const TOTAL_NUM_HOTELS: i32 = 12;

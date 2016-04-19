@@ -8,9 +8,9 @@ mod board;
 mod player;
 mod property;
 mod cards;
-mod ui;
+mod game;
 
 /// The main entry point for the application
 fn main() {
-    ui::Ui::new().run();
+    game::Game::new().run();
 }

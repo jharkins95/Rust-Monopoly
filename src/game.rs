@@ -53,7 +53,7 @@ pub enum GameState {
     GameOver,
 }
 
-pub struct Ui {
+pub struct Game {
     main_window: GlutinWindow,
     gl: GlGraphics,
     board: Board,
@@ -62,8 +62,8 @@ pub struct Ui {
     turn_command: Option<TurnCommand>,
 }
 
-impl Ui {
-    pub fn new() -> Ui {
+impl Game {
+    pub fn new() -> Game {
         let opengl = OpenGL::V3_2;
         let mut window: GlutinWindow = WindowSettings::new(
             "Rust Monopoly",
@@ -73,7 +73,7 @@ impl Ui {
         .exit_on_esc(true)
         .build()
         .unwrap();
-        Ui {
+        Game {
             main_window: window,
             gl: GlGraphics::new(opengl),
             board: Board::new(),
