@@ -20,9 +20,9 @@ use super::property::*;
 pub const WINDOW_WIDTH: u32 = 600;
 pub const WINDOW_HEIGHT: u32 = 600;
 
-const GO_SALARY: u32 = 200;
-const INCOME_TAX: u32 = 200;
-const LUXURY_TAX: u32 = 75;
+pub const GO_SALARY: u32 = 200;
+pub const INCOME_TAX: u32 = 200;
+pub const LUXURY_TAX: u32 = 75;
 
 /// Represents the different stages in a player's turn
 #[derive(Debug, PartialEq, Clone)]

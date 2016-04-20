@@ -214,6 +214,14 @@ impl Board {
         }
     }
     
+    pub fn handle_pass_go(&mut self) {
+        let player = self.get_current_player();
+        println!("{} passed GO and collected {}.",
+                 player.borrow().get_name(),
+                 GO_SALARY);
+        player.borrow_mut().salary(GO_SALARY);
+    }
+    
     pub fn return_assets(&mut self) {
         let debtor = self.get_current_player();
         for property in debtor.borrow().get_properties() {
@@ -315,6 +323,9 @@ impl Board {
                  player.borrow().get_name(),
                  dice_roll);
         new_space.borrow_mut().add_player(player.clone());
+        if new_player_index < old_player_index  {
+            self.handle_pass_go();
+        }
         let mut player = player.borrow_mut();
         player.land(new_space)
     }
