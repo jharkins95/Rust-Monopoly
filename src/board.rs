@@ -32,7 +32,7 @@ pub trait Render {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs);
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SpaceEnum {
     Prop(Rc<RefCell<Property>>),
     Go,
@@ -53,6 +53,7 @@ pub struct Space {
     x: i32,
     y: i32,
     index: usize,
+    players: Vec<Rc<RefCell<Player>>>,
 }
 
 impl Space {
@@ -62,9 +63,23 @@ impl Space {
             x: x,
             y: y,
             index: unsafe { space_cnt },
+            players: Vec::new(),
         };
         unsafe { space_cnt += 1; }
         space
+    }
+    
+    pub fn add_player(&mut self, player: Rc<RefCell<Player>>) {
+        self.players.push(player.clone());
+    }
+    
+    pub fn remove_player(&mut self, other: Rc<RefCell<Player>>) {
+        for i in 0..self.players.len() {
+            if self.players[i] == other {
+                self.players.remove(i);
+                break;
+            }
+        }
     }
     
     pub fn get_index(&self) -> usize {
@@ -86,15 +101,23 @@ impl Space {
 
 impl Render for Space {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
-    /*
-        match *self {
-            Space::Prop(ref property) => {
-                property.borrow().render(gl, args);
-            },
-            _ => (),
-        };
-        */
-        //println!("Drew a space");
+        let mut offset = 0;
+        for player in &self.players {
+        
+            use graphics::*;
+            let player = player.borrow();
+            let x = self.get_x();
+            let y = self.get_y();
+            let token = rectangle::square(x as f64, 
+                                          y as f64, 
+                                          PLAYER_WIDTH as f64);
+
+            gl.draw(args.viewport(), |c, gl| {
+                let transform = c.transform.trans(0 as f64, offset as f64);
+                rectangle(player.get_token_color(), token, transform, gl);
+            });
+            offset += PLAYER_WIDTH;
+        }
     }
 }
 
@@ -128,26 +151,102 @@ impl Board {
     }
     
     pub fn start_turn(&mut self) {
-        println!("It is {}'s turn. Please enter a command: roll, quit, assets", 
-            self.players[self.player_turn].borrow().get_name());
-        self.players[self.player_turn].borrow_mut().set_turn(true);
+        let mut player = self.get_current_player();
+        while player.borrow().is_bankrupt() { // skip bankrupt players
+            self.end_turn();
+            player = self.get_current_player();
+        }
+        println!("");
+        println!("It is {}'s turn. You have ${}.",
+                 player.borrow().get_name(),
+                 player.borrow().get_cash());
+        println!("Please enter a command: roll(R), quit(Q), assets(A)");
+        
+        player.borrow_mut().set_creditor(None);
+        player.borrow_mut().set_turn(true);
     }
     
     /// Debtor is assumed to be the current player
-    pub fn on_rent_collected(&mut self, owner: &mut Player,
+    pub fn on_rent_collected(&mut self, owner: Rc<RefCell<Player>>,
                              prop: &Property) {
         let mut debtor = self.players[self.player_turn].borrow_mut();
-        owner.collect_rent(&mut *debtor, prop);
+        owner.borrow_mut().collect_rent(&mut *debtor, prop);
+        debtor.set_creditor(Some(owner.clone()));
+    }
+    
+    pub fn handle_bankruptcy(&mut self) {
+        let mut debtor = self.get_current_player();
+        if debtor.borrow().is_bankrupt() {
+            println!("{} is bankrupt!", debtor.borrow().get_name());
+            let creditor = {
+                let debtor = debtor.borrow();
+                debtor.get_creditor().clone()
+            };
+            match creditor {
+                Some(ref creditor) => {
+                    println!("{}'s assets will be transferred to \
+                              {}, the creditor.",
+                              debtor.borrow().get_name(),
+                              creditor.borrow().get_name());
+                    self.acquire_assets(creditor.clone());
+                },
+                //TODO: return assets to bank
+                None => {
+                    println!("{}'s assets will be transferred back to the bank.",
+                             debtor.borrow().get_name());
+                    self.return_assets();
+                },
+            }
+        }
+    }
+    
+    pub fn acquire_assets(&mut self, creditor: Rc<RefCell<Player>>) {
+        let debtor = self.get_current_player();
+        for property in debtor.borrow().get_properties() {
+            creditor.borrow_mut().add_property(property.clone());
+            property.borrow_mut().set_owner(Some(creditor.clone()));
+        }
+    }
+    
+    pub fn return_assets(&mut self) {
+        let debtor = self.get_current_player();
+        for property in debtor.borrow().get_properties() {
+            property.borrow_mut().set_owner(None);
+        }
     }
     
     pub fn on_purchase(&mut self, prop: Rc<RefCell<Property>>) {
-        self.players[self.player_turn].borrow_mut().purchase(prop.clone());
-        prop.borrow_mut().purchase(self.players[self.player_turn].clone());
+        let buyer = self.get_current_player();
+        buyer.borrow_mut().purchase(prop.clone());
+        prop.borrow_mut().set_owner(Some(buyer.clone()));
     }
     
     pub fn on_land_go(&mut self, salary: u32) {
         println!("You landed on GO! Collect ${}.", salary);
         self.players[self.player_turn].borrow_mut().salary(salary);
+    }
+    
+    pub fn get_num_remaining_players(&self) -> i32 {
+        let mut cnt: i32 = 0;
+        for player in &self.players {
+            if !player.borrow().is_bankrupt() {
+                cnt += 1;
+            }
+        }
+        cnt
+    }
+    
+    pub fn get_winner(&self) -> Option<Rc<RefCell<Player>>> {
+        if self.get_num_remaining_players() > 1 {
+            None
+        } else {
+            for player in &self.players {
+                if !player.borrow().is_bankrupt() {
+                    return Some(player.clone())
+                }
+            }
+            unreachable!();
+        }
     }
     
     pub fn on_land_chance(&mut self) {
@@ -166,23 +265,30 @@ impl Board {
     
     pub fn on_land_free_parking(&mut self) {
         println!("Landed on Free Parking");
+        // TODO: add free parking salary??
     }
     
     pub fn on_land_go_to_jail(&mut self, go_salary: u32) {
         println!("Go to jail! Go directly to jail! Do not pass \
                   GO! Do not collect ${}!", go_salary);   
-        self.players[self.player_turn].borrow_mut().jail(
-            self.spaces[10].clone());
+        let player = self.get_current_player();
+        let gtj = player.borrow().get_space();
+        let jail = self.get_space(10).clone();
+        gtj.borrow_mut().remove_player(player.clone());
+        jail.borrow_mut().add_player(player.clone());
+        player.borrow_mut().jail(self.spaces[10].clone());
     }
     
     pub fn on_land_income_tax(&mut self, tax: u32) {
         println!("Income tax! Pay ${}.", tax);
-        self.players[self.player_turn].borrow_mut().tax(tax);
+        let player = self.get_current_player();
+        player.borrow_mut().tax(tax);
     }
     
     pub fn on_land_luxury_tax(&mut self, tax: u32) {
         println!("Luxury tax! Pay ${}.", tax);
-        self.players[self.player_turn].borrow_mut().tax(tax);
+        let player = self.get_current_player();
+        player.borrow_mut().tax(tax);
     }
     
     pub fn get_space(&self, index: usize) -> Rc<RefCell<Space>> {
@@ -191,17 +297,20 @@ impl Board {
     }
     
     pub fn roll_and_land(&mut self) -> LandAction {
-        let mut player = self.players[self.player_turn].clone();
+        let player = self.get_current_player();
         let dice_roll = get_dice_roll() as usize;
-        let old_space = player.borrow().get_space();
+        let old_space = player.borrow_mut().get_space();
+        old_space.borrow_mut().remove_player(player.clone());
         let old_player_index = old_space.borrow().get_index();
         let new_player_index = self.get_player_index(old_player_index + dice_roll);
         
-        let new_space = self.spaces[new_player_index].clone();
+        let new_space = self.get_space(new_player_index).clone();
         println!("{} rolled a {}.",
                  player.borrow().get_name(),
                  dice_roll);
-        self.players[self.player_turn].borrow_mut().land(new_space)
+        new_space.borrow_mut().add_player(player.clone());
+        let mut player = player.borrow_mut();
+        player.land(new_space)
     }
     
     pub fn print_player_assets(&self) {
@@ -375,6 +484,7 @@ impl Board {
                                   50,
                                   ColorGroup::DarkBlue)))), 522, 472);      
 
+        self.spaces = Vec::new();
         self.spaces.push(Rc::new(RefCell::new(go)));
         self.spaces.push(Rc::new(RefCell::new(med_ave)));
         self.spaces.push(Rc::new(RefCell::new(comm_chest_bot)));
@@ -417,8 +527,13 @@ impl Board {
         self.spaces.push(Rc::new(RefCell::new(bdwk)));  
     }
     
-    pub fn add_player(&mut self, player: Player) {
-        self.players.push(Rc::new(RefCell::new(player)));
+    pub fn add_player(&mut self, player: Rc<RefCell<Player>>) {
+        self.players.push(player.clone());
+    }
+    
+    /// Returns the player whose turn is currently up
+    pub fn get_current_player(&self) -> Rc<RefCell<Player>> {
+        self.players[self.player_turn].clone()
     }
     
     /// Returns the index of the next turn
@@ -439,11 +554,6 @@ impl Render for Board {
         for space in &(self.spaces) {
             space.borrow().render(gl, args);
         }
-        
-        for player in &(self.players) {
-            player.borrow().render(gl, args);
-        }
-        //println!("Drew the board");
     }
 }
 

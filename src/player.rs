@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use piston::input::*;
 use opengl_graphics::GlGraphics;
 
@@ -7,6 +8,7 @@ use super::property::*;
 use super::board::*;
 
 const STARTING_CASH: i32 = 1500;
+pub const PLAYER_WIDTH: i32 = 10;
 
 pub const WHITE:  [f32; 4] = [1.0; 4];
 pub const RED:    [f32; 4] = [1.0, 0.0, 0.0, 1.0];
@@ -35,6 +37,7 @@ pub struct Player {
     space: Rc<RefCell<Space>>,
     properties: Vec<Rc<RefCell<Property>>>,
     token_color: [f32; 4],
+    creditor: Option<Rc<RefCell<Player>>>,
 }
 
 impl Player {
@@ -48,7 +51,20 @@ impl Player {
             space: start_space.clone(),
             properties: Vec::new(),
             token_color: token_color,
+            creditor: None,
         }
+    }
+    
+    pub fn get_token_color(&self) -> [f32; 4] {
+        self.token_color
+    }
+    
+    pub fn set_creditor(&mut self, creditor: Option<Rc<RefCell<Player>>>) {
+        self.creditor = creditor.clone();
+    }
+    
+    pub fn get_creditor(&self) -> Option<Rc<RefCell<Player>>> {
+        self.creditor.clone()
     }
 
     pub fn land(&mut self, space: Rc<RefCell<Space>>) -> LandAction {               
@@ -72,13 +88,21 @@ impl Player {
         };
     }
     
+    pub fn get_properties(&self) -> &Vec<Rc<RefCell<Property>>> {
+        &self.properties
+    }
+    
+    pub fn add_property(&mut self, property: Rc<RefCell<Property>>) {
+        self.properties.push(property.clone());
+    }
+    
     pub fn purchase(&mut self, property: Rc<RefCell<Property>>) {
         println!("{} purchased {} for ${}!",
                 self.name,
                 property.borrow().get_name(),
                 property.borrow().get_purchase_price());
         self.cash -= property.borrow().get_purchase_price() as i32;
-        self.properties.push(property.clone());
+        self.add_property(property.clone());
     }
 
     pub fn salary(&mut self, salary: u32) {
@@ -132,21 +156,6 @@ impl Player {
     
     pub fn get_y(&self) -> i32 {
         self.space.borrow().get_y()
-    }
-}
-
-impl Render for Player {
-    fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
-        use graphics::*;
-        
-        let token = rectangle::square(self.space.borrow().get_x() as f64, 
-                                      self.space.borrow().get_y() as f64, 
-                                      20.0);
-
-        gl.draw(args.viewport(), |c, gl| {
-            let transform = c.transform;
-            rectangle(self.token_color, token, transform, gl);
-        });
     }
 }
 

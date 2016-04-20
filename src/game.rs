@@ -25,7 +25,7 @@ const INCOME_TAX: u32 = 200;
 const LUXURY_TAX: u32 = 75;
 
 /// Represents the different stages in a player's turn
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TurnState {
     StartTurn,
     WaitingForCommand,
@@ -33,10 +33,11 @@ pub enum TurnState {
     AfterCommand,
     ConfirmQuit,
     ConfirmPurchase(Rc<RefCell<Property>>),
+    ConfirmPlayAgain,
 }
 
 /// Represents a player's choice of action during their turn
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TurnCommand {
     Roll,
     Quit,
@@ -95,7 +96,7 @@ impl Game {
         let mut available_colors = vec![true, true, true, true, true, true];
         let colors = vec![RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE];
         
-        let mut turns_to_players: BTreeMap<i32, Player> 
+        let mut turns_to_players: BTreeMap<i32, Rc<RefCell<Player>>> 
             = BTreeMap::new();
         for i in 0..num_players {
             print!("Please enter Player {}'s name: ", i + 1);
@@ -117,8 +118,14 @@ impl Game {
                 n = get_dice_roll();
             }
             
-            turns_to_players.insert(
-              n, Player::new(name.trim().to_string(), self.board.get_space(0), colors[color]));
+            
+            let mut go = self.board.get_space(0);
+            let player = Rc::new(RefCell::new(
+                Player::new(name.trim().to_string(), 
+                            go.clone(), 
+                            colors[color])));
+            go.borrow_mut().add_player(player.clone());
+            turns_to_players.insert(n, player.clone());
         }
 
         for (_, player) in turns_to_players {
@@ -157,31 +164,49 @@ impl Game {
                 }
             },
             Key::Y => {
-                match self.turn_state.clone() {
-                    TurnState::ConfirmQuit => {
-                        println!("Goodbye!");
-                        process::exit(0);
-                    },
-                    TurnState::ConfirmPurchase(ref mut prop) => {
-                        self.board.on_purchase(prop.clone());
-                        self.turn_state = TurnState::AfterCommand;
+                match self.game_state.clone() {
+                    GameState::GameOver => {
+                        self.game_state = GameState::GameStateSetup;
+                        self.turn_state = TurnState::StartTurn;
                         self.turn_command = None;
                     },
+                    GameState::GameRun => {
+                        match self.turn_state.clone() {
+                            TurnState::ConfirmQuit => {
+                                println!("Goodbye!");
+                                process::exit(0);
+                            },
+                            TurnState::ConfirmPurchase(ref mut prop) => {
+                                self.board.on_purchase(prop.clone());
+                                self.turn_state = TurnState::AfterCommand;
+                                self.turn_command = None;
+                            },
+                            _ => (),
+                        };
+                    },
                     _ => (),
-                }
+                };
             },
             Key::N => {
-                match self.turn_state {
-                    TurnState::ConfirmQuit => {
-                        self.turn_state = TurnState::WaitingForCommand;
-                        self.turn_command = None;
+                match self.game_state.clone() {
+                    GameState::GameOver => {
+                        process::exit(0);
                     },
-                    TurnState::ConfirmPurchase(_) => {
-                        self.turn_state = TurnState::AfterCommand;
-                        self.turn_command = None;
+                    GameState::GameRun => {
+                        match self.turn_state {
+                            TurnState::ConfirmQuit => {
+                                self.turn_state = TurnState::WaitingForCommand;
+                                self.turn_command = None;
+                            },
+                            TurnState::ConfirmPurchase(_) => {
+                                self.turn_state = TurnState::AfterCommand;
+                                self.turn_command = None;
+                            },
+                            _ => (),
+                        };
                     },
                     _ => (),
-                }
+                };
             },
             Key::A => {
                 if self.turn_state == TurnState::WaitingForCommand {
@@ -194,9 +219,12 @@ impl Game {
     }
     
     pub fn handle_land_space(&mut self, space: Rc<RefCell<Space>>) {
-        let space = space.borrow();
-        let s_type = space.get_type();
-        match *s_type {
+        let t = {
+            let space = space.borrow();
+            space.get_type().clone()
+        };
+            
+        match t {
             SpaceEnum::Prop(_) => unreachable!(),
             SpaceEnum::Go => self.board.on_land_go(GO_SALARY),
             SpaceEnum::Chance => self.board.on_land_chance(),
@@ -213,13 +241,13 @@ impl Game {
         match action {
             LandAction::Rent(ref prop) => {
                 let property = prop.borrow();
-                let mut owner = property.get_owner().borrow_mut();
+                let owner = property.get_owner();
                 
                 println!("{} is owned by {}. Pay rent of ${}!", 
                          property.get_name(),
-                         owner.get_name(), 
+                         owner.borrow().get_name(), 
                          property.get_rent().unwrap());
-                self.board.on_rent_collected(&mut *owner, &*property);
+                self.board.on_rent_collected(owner.clone(), &*property);
                 
                 self.turn_state = TurnState::AfterCommand;
                 self.turn_command = None;
@@ -238,8 +266,9 @@ impl Game {
                 self.turn_command = None;
             },
             LandAction::MightPurchase(ref prop) => {
-                println!("{} is not owned. Would you like to buy it?",
-                                 prop.borrow().get_name());
+                println!("{} is not owned. Would you like to buy it for ${}?",
+                                 prop.borrow().get_name(),
+                                 prop.borrow().get_purchase_price());
                 
                 self.turn_state = TurnState::ConfirmPurchase(prop.clone());
                 self.turn_command = None;
@@ -298,7 +327,10 @@ impl Game {
                         },
                         
                         TurnState::AfterCommand => {
-                            // TODO: handle bankruptcy here
+                            self.board.handle_bankruptcy();
+                            if self.board.get_num_remaining_players() == 1 {
+                                self.game_state = GameState::GameOver;
+                            }
                             self.board.end_turn();
                             self.turn_state = TurnState::StartTurn;
                             self.turn_command = None;
@@ -309,7 +341,22 @@ impl Game {
                 },
                 
                 GameState::GameOver => {
-                    // TODO: prompt players here for new game; display assets of each
+                    match self.turn_state {
+                        TurnState::ConfirmPlayAgain => (),
+                        _ => {
+                            let winner = self.board.get_winner().unwrap();
+                            println!("{} has won the game!",
+                                winner.borrow().get_name());
+                            println!("{} has ${} and the following assets:",
+                                winner.borrow().get_name(),
+                                winner.borrow().get_cash());
+                            winner.borrow().print_assets();
+                    
+                            println!("Play again?");
+                            self.turn_state = TurnState::ConfirmPlayAgain;
+                    
+                        },
+                    };
                 },
             }
             

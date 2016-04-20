@@ -125,8 +125,8 @@ impl Property {
         !(self.owner == None)
     }
     
-    pub fn purchase(&mut self, owner: Rc<RefCell<Player>>) {
-        self.owner = Some(owner);
+    pub fn set_owner(&mut self, owner: Option<Rc<RefCell<Player>>>) {
+        self.owner = owner;
     }
 }
 
