@@ -6,6 +6,7 @@ use opengl_graphics::GlGraphics;
 
 use super::property::*;
 use super::board::*;
+use super::space::*;
 
 const STARTING_CASH: i32 = 1500;
 pub const PLAYER_WIDTH: i32 = 10;

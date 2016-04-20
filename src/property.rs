@@ -4,7 +4,8 @@ use piston::input::*;
 use opengl_graphics::GlGraphics;
 
 use super::board::*;
-use player::*;
+use super::player::*;
+use super::game::*;
 
 const MAX_NUM_HOUSES: i32 = 4;
 const MAX_NUM_HOTELS: i32 = 1;

@@ -15,6 +15,7 @@ use opengl_graphics::{GlGraphics, OpenGL};
 use super::board::*;
 use super::player::*;
 use super::property::*;
+use super::space::*;
 
 
 pub const WINDOW_WIDTH: u32 = 600;
@@ -23,6 +24,12 @@ pub const WINDOW_HEIGHT: u32 = 600;
 pub const GO_SALARY: u32 = 200;
 pub const INCOME_TAX_AMT: u32 = 200;
 pub const LUXURY_TAX_AMT: u32 = 75;
+
+/// Objects that can be drawn to the screen with
+/// the Piston/OpenGL framework
+pub trait Render {
+    fn render(&self, gl: &mut GlGraphics, args: &RenderArgs);
+}
 
 /// Represents the different stages in a player's turn
 #[derive(Debug, PartialEq, Clone)]

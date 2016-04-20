@@ -9,6 +9,7 @@ mod player;
 mod property;
 mod cards;
 mod game;
+mod space;
 
 /// The main entry point for the application
 fn main() {
