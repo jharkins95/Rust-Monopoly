@@ -29,6 +29,7 @@ const LUXURY_TAX: u32 = 75;
 pub enum TurnState {
     StartTurn,
     WaitingForCommand,
+    InJail,
     ExecutingCommand,
     AfterCommand,
     ConfirmQuit,
@@ -42,6 +43,8 @@ pub enum TurnCommand {
     Roll,
     Quit,
     Assets,
+    PayJailFine,
+    UseJailCard,
     // TODO: add more types of actions (trades, buy/sell houses)
 }
 
@@ -113,9 +116,9 @@ impl Game {
                     print!("That color is already chosen! Pick another color: ");
                 }
             }
-            let mut n = get_dice_roll();
+            let mut n = get_dice_roll_12();
             while turns_to_players.contains_key(&n) {
-                n = get_dice_roll();
+                n = get_dice_roll_12();
             }
             
             
@@ -155,6 +158,13 @@ impl Game {
                 if self.turn_state == TurnState::WaitingForCommand {
                     self.turn_state = TurnState::ExecutingCommand;
                     self.turn_command = Some(TurnCommand::Roll);
+                } else if self.turn_state == TurnState::InJail {
+                    self.turn_command = Some(TurnCommand::Roll);
+                }
+            },
+            Key::C => {
+                if self.turn_state == TurnState::InJail {
+                    unimplemented!();
                 }
             },
             Key::Q => {
@@ -212,6 +222,17 @@ impl Game {
                 if self.turn_state == TurnState::WaitingForCommand {
                     self.turn_state = TurnState::ExecutingCommand;
                     self.turn_command = Some(TurnCommand::Assets);
+                }
+            },
+            Key::P => {
+                if self.turn_state == TurnState::InJail {
+                    let player = self.board.get_current_player();
+                    let cash = player.borrow().get_cash();
+                    if cash >= 50 {
+                        self.turn_command = Some(TurnCommand::PayJailFine);
+                    } else {
+                        println!("You don't have enough money! Choose another option.");
+                    }
                 }
             },
             _ => self.turn_command = None,
@@ -299,15 +320,21 @@ impl Game {
                     match self.turn_state {
                         TurnState::StartTurn => {
                             self.board.start_turn();
-                            self.turn_state = TurnState::WaitingForCommand
+                            let player = self.board.get_current_player();
+                            let player = player.borrow();
+                            if player.is_in_jail() {
+                                self.turn_state = TurnState::InJail;
+                            } else {
+                                self.turn_state = TurnState::WaitingForCommand;
+                            }
                         },
                         TurnState::WaitingForCommand => {
-                        
+                            
                         },
                         TurnState::ExecutingCommand => {
                             if let Some(command) = self.turn_command.clone() {;
                                 match command {
-                                    TurnCommand::Roll => {
+                                    TurnCommand::Roll => {  
                                         let action = self.board.roll_and_land();
                                         self.handle_land(action);
                                     },
@@ -321,6 +348,50 @@ impl Game {
                                         self.board.print_player_assets();
                                         self.turn_state = TurnState::WaitingForCommand;
                                     },
+                                    
+                                    _ => (),
+                                };   
+                                self.turn_command = None;
+                            };
+                        },
+                        
+                        TurnState::InJail => {
+                            if let Some(command) = self.turn_command.clone() {;
+                                match command {
+                                    TurnCommand::PayJailFine => {  
+                                        let player = self.board.get_current_player();
+                                        println!("{} paid $50.", player.borrow().get_name());
+                                        player.borrow_mut().tax(50);
+                                        player.borrow_mut().unjail();
+                                        self.turn_state = TurnState::WaitingForCommand;
+                                        self.turn_command = None;
+                                    },
+                                    
+                                    TurnCommand::Roll => {
+                                        let player = self.board.get_current_player();
+                                        let first = get_dice_roll_6();
+                                        let second = get_dice_roll_6();
+                                        if first == second {
+                                            println!("{} rolled doubles and is now free!", player.borrow().get_name());
+                                            player.borrow_mut().unjail();
+                                            self.turn_state = TurnState::WaitingForCommand;
+                                            self.turn_command = None;
+                                        } else {
+                                            println!("{} did not roll doubles and remains in jail!", player.borrow().get_name());
+                                            self.turn_state = TurnState::AfterCommand;
+                                            self.turn_command = None;
+                                        }
+                                    },
+                                    
+                                    TurnCommand::UseJailCard => {
+                                        let player = self.board.get_current_player();
+                                        println!("{} used a GOOJFC.", player.borrow().get_name());
+                                        player.borrow_mut().unjail();
+                                        self.turn_state = TurnState::WaitingForCommand;
+                                        self.turn_command = None;
+                                    },
+                                    
+                                    _ => (),
                                 };   
                                 self.turn_command = None;
                             };

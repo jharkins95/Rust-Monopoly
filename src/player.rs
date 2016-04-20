@@ -134,6 +134,14 @@ impl Player {
         self.in_jail = true;
     }
     
+    pub fn unjail(&mut self) {
+        self.in_jail = false;
+    }
+    
+    pub fn is_in_jail(&self) -> bool {
+        self.in_jail
+    }
+    
     pub fn set_turn(&mut self, turn: bool) {
         self.has_turn = turn;
     }

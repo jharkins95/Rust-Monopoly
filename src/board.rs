@@ -160,7 +160,13 @@ impl Board {
         println!("It is {}'s turn. You have ${}.",
                  player.borrow().get_name(),
                  player.borrow().get_cash());
-        println!("Please enter a command: roll(R), quit(Q), assets(A)");
+        
+        if player.borrow().is_in_jail() {
+            println!("You are in jail! You can try to roll doubles(R), \
+                      pay $50(P), or use a Get Out of Jail Free Card(C).");
+        } else {
+            println!("Please enter a command: roll(R), quit(Q), assets(A)");
+        }
         
         player.borrow_mut().set_creditor(None);
         player.borrow_mut().set_turn(true);
@@ -298,7 +304,7 @@ impl Board {
     
     pub fn roll_and_land(&mut self) -> LandAction {
         let player = self.get_current_player();
-        let dice_roll = get_dice_roll() as usize;
+        let dice_roll = get_dice_roll_12() as usize;
         let old_space = player.borrow_mut().get_space();
         old_space.borrow_mut().remove_player(player.clone());
         let old_player_index = old_space.borrow().get_index();
@@ -636,8 +642,14 @@ pub fn get_num_players() -> i32 {
     }
 }
 
+pub fn get_dice_roll_6() -> i32 {
+    let mut rng = rand::thread_rng();
+    let result: i32 = rng.gen_range(1, 7);
+    result
+}
+
 /// Simulate a dice roll: return an integer between 2 and 12, inclusive
-pub fn get_dice_roll() -> i32 {
+pub fn get_dice_roll_12() -> i32 {
     let mut rng = rand::thread_rng();
     let first: i32 = rng.gen_range(1, 7); // [1, 7)
     let second: i32 = rng.gen_range(1, 7);
