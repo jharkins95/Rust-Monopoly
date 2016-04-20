@@ -115,10 +115,11 @@ impl Board {
     
     /// Debtor is assumed to be the current player
     pub fn on_rent_collected(&mut self, owner: Rc<RefCell<Player>>,
-                             prop: &Property) {
-        let mut debtor = self.players[self.player_turn].borrow_mut();
-        owner.borrow_mut().collect_rent(&mut *debtor, prop);
-        debtor.set_creditor(Some(owner.clone()));
+                             prop: Rc<RefCell<Property>>) {
+        let mut debtor = self.players[self.player_turn].clone();
+        let rent = self.get_rent(prop.clone());
+        owner.borrow_mut().collect_rent(debtor.clone(), rent);
+        debtor.borrow_mut().set_creditor(Some(owner.clone()));
     }
     
     pub fn handle_bankruptcy(&mut self) {
@@ -289,6 +290,42 @@ impl Board {
     pub fn on_land_free_parking(&mut self) {
         println!("Landed on Free Parking");
         // TODO: add free parking salary??
+    }
+    
+    pub fn get_rent(&self, property: Rc<RefCell<Property>>) -> u32 {
+        let color_group = property.borrow().get_color_group();
+        let base_rent = property.borrow().get_base_rent();
+        let owner = {
+            let property = property.borrow();
+            property.get_owner().clone()
+        };    
+        let num_props = owner.borrow().get_num_props(&color_group);
+        let has_monopoly = owner.borrow().has_monopoly(&color_group);
+        match color_group {
+            ColorGroup::Railroad => {
+                match num_props {
+                    1 => base_rent,
+                    2 => base_rent * 2,
+                    3 => base_rent * 4,
+                    4 => base_rent * 8,
+                    _ => unreachable!(),
+                }
+            },
+            ColorGroup::Utility => {
+                match num_props {
+                    1 => base_rent * 4,
+                    2 => base_rent * 10,
+                    _ => unreachable!(),
+                }
+            },
+            _ => {
+                if has_monopoly {
+                    base_rent * 3
+                } else {
+                    base_rent
+                }
+            },
+        }
     }
     
     pub fn on_land_go_to_jail(&mut self, go_salary: u32) {

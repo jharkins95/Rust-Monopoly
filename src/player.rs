@@ -89,6 +89,23 @@ impl Player {
         };
     }
     
+    pub fn has_monopoly(&self, color_group: &ColorGroup) -> bool {
+        let num_props = self.get_num_props(color_group);
+        match *color_group {
+            ColorGroup::DarkPurple => num_props == 2,
+            ColorGroup::LightBlue => num_props == 3,
+            ColorGroup::LightPurple => num_props == 3,
+            ColorGroup::Orange => num_props == 3,
+            ColorGroup::Red => num_props == 3,
+            ColorGroup::Yellow => num_props == 3, 
+            ColorGroup::Green => num_props == 3, 
+            ColorGroup::DarkBlue => num_props == 2,
+            ColorGroup::Railroad => num_props == 4,
+            ColorGroup::Utility => num_props == 2,
+            ColorGroup::Space => unreachable!(),
+        }
+    }
+    
     pub fn get_properties(&self) -> &Vec<Rc<RefCell<Property>>> {
         &self.properties
     }
@@ -153,10 +170,21 @@ impl Player {
         }
     }
 
-    pub fn collect_rent(&mut self, other: &mut Player, property: &Property) {
-        let rent = property.get_rent().unwrap() as i32;
-        self.cash += rent;
-        other.cash -= rent;
+    pub fn collect_rent(&mut self, other: Rc<RefCell<Player>>, 
+                        rent: u32) {
+        self.cash += rent as i32;
+        other.borrow_mut().cash -= rent as i32;
+    }
+    
+    pub fn get_num_props(&self, color_group: &ColorGroup) -> i32 {
+        let mut cnt: i32 = 0;
+        for property in &self.properties {
+            let property = property.borrow();
+            if property.get_color_group() == *color_group {
+                cnt += 1;
+            }
+        }
+        cnt
     }
     
     pub fn get_x(&self) -> i32 {

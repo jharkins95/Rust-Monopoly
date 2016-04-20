@@ -274,14 +274,16 @@ impl Game {
     pub fn handle_land(&mut self, action: LandAction) {
         match action {
             LandAction::Rent(ref prop) => {
-                let property = prop.borrow();
-                let owner = property.get_owner();
+                let owner = {
+                    let property = prop.borrow();
+                    property.get_owner().clone()
+                };    
                 
                 println!("{} is owned by {}. Pay rent of ${}!", 
-                         property.get_name(),
+                         prop.borrow().get_name(),
                          owner.borrow().get_name(), 
-                         property.get_rent().unwrap());
-                self.board.on_rent_collected(owner.clone(), &*property);
+                         self.board.get_rent(prop.clone()));
+                self.board.on_rent_collected(owner.clone(), prop.clone());
                 
                 self.turn_state = TurnState::AfterCommand;
                 self.turn_command = None;

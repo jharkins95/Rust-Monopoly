@@ -10,7 +10,7 @@ use super::game::*;
 const MAX_NUM_HOUSES: i32 = 4;
 const MAX_NUM_HOTELS: i32 = 1;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ColorGroup {
     DarkPurple,
     LightBlue,
@@ -68,8 +68,12 @@ impl Property {
         self.is_mortgaged
     }
 
-    pub fn get_rent(&self) -> Result<u32, String> {
-        Ok(self.base_rent) // TODO: calculate rent based on hotels, houses, monops
+    pub fn get_base_rent(&self) -> u32 {
+        self.base_rent
+    }
+    
+    pub fn get_color_group(&self) -> ColorGroup {
+        self.color_group.clone()
     }
 
     pub fn get_owner(&self) -> &Rc<RefCell<Player>> {
