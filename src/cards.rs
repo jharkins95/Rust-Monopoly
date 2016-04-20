@@ -1,9 +1,9 @@
 /// Represents a Community Chest card
 pub enum CommunityChest {
     AdvanceToGo,
-    BankErrorInYourFavor(i32),
+    BankErrorInYourFavor,
     GoToJail,
-    PaySchoolFees(i32),
+    PaySchoolFees,
     GetOutOfJailFree,
 }
 

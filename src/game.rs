@@ -21,8 +21,8 @@ pub const WINDOW_WIDTH: u32 = 600;
 pub const WINDOW_HEIGHT: u32 = 600;
 
 pub const GO_SALARY: u32 = 200;
-pub const INCOME_TAX: u32 = 200;
-pub const LUXURY_TAX: u32 = 75;
+pub const INCOME_TAX_AMT: u32 = 200;
+pub const LUXURY_TAX_AMT: u32 = 75;
 
 /// Represents the different stages in a player's turn
 #[derive(Debug, PartialEq, Clone)]
@@ -240,7 +240,7 @@ impl Game {
     }
     
     pub fn handle_land_space(&mut self, space: Rc<RefCell<Space>>) {
-        let t = {
+        let t = { // due to Rust's pedantic borrowing system...
             let space = space.borrow();
             space.get_type().clone()
         };
@@ -248,13 +248,19 @@ impl Game {
         match t {
             SpaceEnum::Prop(_) => unreachable!(),
             SpaceEnum::Go => self.board.on_land_go(GO_SALARY),
-            SpaceEnum::Chance => self.board.on_land_chance(),
+            SpaceEnum::Chance => {
+                let action = self.board.on_land_chance();
+                //self.turn_state = TurnState::ExecutingCommand;
+                println!("turn_state = {:?}", self.turn_state);
+                println!("turn_command = {:?}", self.turn_command);
+                self.handle_land(action);
+            },
             SpaceEnum::CommunityChest => self.board.on_land_comm_chest(),
             SpaceEnum::Jail => self.board.on_land_jail(),
             SpaceEnum::FreeParking => self.board.on_land_free_parking(),
             SpaceEnum::GoToJail => self.board.on_land_go_to_jail(GO_SALARY),
-            SpaceEnum::IncomeTax => self.board.on_land_income_tax(INCOME_TAX),
-            SpaceEnum::LuxuryTax => self.board.on_land_luxury_tax(LUXURY_TAX),
+            SpaceEnum::IncomeTax => self.board.on_land_income_tax(INCOME_TAX_AMT),
+            SpaceEnum::LuxuryTax => self.board.on_land_luxury_tax(LUXURY_TAX_AMT),
         }
     }
     
@@ -295,9 +301,9 @@ impl Game {
                 self.turn_command = None;
             },
             LandAction::Space(ref space) => {
-                self.handle_land_space(space.clone());
                 self.turn_state = TurnState::AfterCommand;
                 self.turn_command = None;
+                self.handle_land_space(space.clone());
             },
         }
     }
