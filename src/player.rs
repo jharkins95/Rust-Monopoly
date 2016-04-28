@@ -1,3 +1,10 @@
+//
+//! Player stores the player's properties, their token color,
+//! the space the player is currently landed on, the last creditor
+//! the player paid rent to, whether the player is in jail,
+//! and whether the player is currently up for his turn.
+//!
+
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -19,7 +26,7 @@ pub const GREEN:  [f32; 4] = [0.0, 1.0, 0.0, 1.0];
 pub const BLUE:   [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 pub const PURPLE: [f32; 4] = [102.0/255.0, 0.0, 51.0/255.0, 1.0];
 
-
+/// An action the player takes upon landing on a property
 #[derive(Debug, Clone)]
 pub enum LandAction {
     Rent(Rc<RefCell<Property>>),
@@ -38,7 +45,8 @@ pub struct Player {
     space: Rc<RefCell<Space>>,
     properties: Vec<Rc<RefCell<Property>>>,
     token_color: [f32; 4],
-    creditor: Option<Rc<RefCell<Player>>>,
+    creditor: Option<Rc<RefCell<Player>>>, // None if the creditor is
+                                           // the bank
 }
 
 impl Player {
@@ -67,6 +75,85 @@ impl Player {
     pub fn get_creditor(&self) -> Option<Rc<RefCell<Player>>> {
         self.creditor.clone()
     }
+    
+    pub fn get_property(&self, name: &str) -> Option<Rc<RefCell<Property>>> {
+        for prop in &self.properties {
+            if name == prop.borrow().get_name() {
+                return Some(prop.clone());
+            }
+        }
+        None
+    }
+    
+    pub fn has_property(&self, name: String) -> bool {
+        !(self.get_property(&name.clone()).is_none())
+    }
+    
+    pub fn has_monopoly(&self, group: ColorGroup) -> bool {
+        let num_in_group = self.get_num_props(&group);
+        match group {
+            ColorGroup::DarkPurple |
+            ColorGroup::DarkBlue  |
+            ColorGroup::Utility   => num_in_group == 2,
+            
+            ColorGroup::LightBlue |
+            ColorGroup::LightPurple  |
+            ColorGroup::Orange  |
+            ColorGroup::Red |
+            ColorGroup::Yellow  |
+            ColorGroup::Green   => num_in_group == 3,
+            
+            ColorGroup::Railroad => num_in_group == 4,
+            
+            _ => unreachable!(),
+        }
+    }
+    
+    /// Get all properties of the player that are in a monopoly
+    /// not counting railroads/utils; can't put houses and hotels on those
+    pub fn get_monopolies(&self) -> Vec<Rc<RefCell<Property>>> {
+        let mut props = Vec::new();
+        if self.has_monopoly(ColorGroup::DarkPurple) {
+            props.push(self.get_property("Mediterranean Avenue").unwrap());
+            props.push(self.get_property("Baltic Avenue").unwrap());
+        }
+        if self.has_monopoly(ColorGroup::LightBlue) {
+            props.push(self.get_property("Oriental Avenue").unwrap());
+            props.push(self.get_property("Vermont Avenue").unwrap());
+            props.push(self.get_property("Connecticut Avenue").unwrap());
+        }
+        if self.has_monopoly(ColorGroup::LightPurple) {
+            props.push(self.get_property("St. Charles Place").unwrap());
+            props.push(self.get_property("States Avenue").unwrap());
+            props.push(self.get_property("Virginia Avenue").unwrap());
+        }
+        if self.has_monopoly(ColorGroup::Orange) {
+            props.push(self.get_property("St. James Place").unwrap());
+            props.push(self.get_property("Tennessee Avenue").unwrap());
+            props.push(self.get_property("New York Avenue").unwrap());
+        }
+        if self.has_monopoly(ColorGroup::Red) {
+            props.push(self.get_property("Kentucky Avenue").unwrap());
+            props.push(self.get_property("Indiana Avenue").unwrap());
+            props.push(self.get_property("Illinois Avenue").unwrap());
+        }
+        if self.has_monopoly(ColorGroup::Yellow) {
+            props.push(self.get_property("Atlantic Avenue").unwrap());
+            props.push(self.get_property("Ventnor Avenue").unwrap());
+            props.push(self.get_property("Marvin Gardens").unwrap());
+        }
+        if self.has_monopoly(ColorGroup::Green) {
+            props.push(self.get_property("Pennsylvania Avenue").unwrap());
+            props.push(self.get_property("North Carolina Avenue").unwrap());
+            props.push(self.get_property("Pacific Avenue").unwrap());
+        }
+        if self.has_monopoly(ColorGroup::DarkBlue) {
+            props.push(self.get_property("Park Place").unwrap());
+            props.push(self.get_property("Boardwalk").unwrap());
+        }
+        
+        props
+    }
 
     pub fn land(&mut self, space: Rc<RefCell<Space>>) -> LandAction {               
         self.space = space.clone();
@@ -89,7 +176,7 @@ impl Player {
         };
     }
     
-    pub fn has_monopoly(&self, color_group: &ColorGroup) -> bool {
+    pub fn has_monopoly_cg(&self, color_group: &ColorGroup) -> bool {
         let num_props = self.get_num_props(color_group);
         match *color_group {
             ColorGroup::DarkPurple => num_props == 2,
@@ -123,11 +210,11 @@ impl Player {
         self.add_property(property.clone());
     }
 
-    pub fn salary(&mut self, salary: u32) {
+    pub fn salary(&mut self, salary: i32) {
         self.cash += salary as i32;
     }
     
-    pub fn tax(&mut self, tax: u32) {
+    pub fn tax(&mut self, tax: i32) {
         self.cash -= tax as i32;
     }
     
@@ -171,7 +258,7 @@ impl Player {
     }
 
     pub fn collect_rent(&mut self, other: Rc<RefCell<Player>>, 
-                        rent: u32) {
+                        rent: i32) {
         self.cash += rent as i32;
         other.borrow_mut().cash -= rent as i32;
     }

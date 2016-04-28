@@ -1,3 +1,30 @@
+//
+//! The Game struct stores the entirety of the game state, including the
+//! game board, whether the game is running or not, 
+//! the current state of a player's turn, and the player's command.
+//! It also stores the window in which game objects are drawn.
+//!
+//! The game proceeds as follows:
+//! 1. Player prompted for action.
+//! 2. Player enters key corresponding to action in the console.
+//! 3. Game executes the player's action.
+//! 4. If the game requires a response to the action (such as landing on
+//!    unowned property), the player will be prompted to respond by
+//!    typing a key in the window.
+//! 5. After the player's turn is finished, the game will check if they
+//!    are bankrupt. If so, the player's assets will be transferred to
+//!    the creditor (or the bank if there is no creditor). The bankrupt
+//!    player will no longer be able to trade properties, collect rents,
+//!    or otherwise participate in the game.
+//! 6. The last remaining player wins the game.
+//!
+//! During the course of the game, the Game will notify its Board that 
+//! the next player is ready to begin his turn via board.start_turn().
+//! When the player lands, the Board will return a LandAction to the Game,
+//! representing the type of action taken upon landing (buying/selling/
+//! renting/etc); see LandAction for more details.
+//!
+
 extern crate opengl_graphics;
 extern crate piston;
 extern crate glutin_window;
@@ -18,12 +45,12 @@ use super::property::*;
 use super::space::*;
 
 
-pub const WINDOW_WIDTH: u32 = 600;
-pub const WINDOW_HEIGHT: u32 = 600;
+pub const WINDOW_WIDTH: i32 = 600;
+pub const WINDOW_HEIGHT: i32 = 600;
 
-pub const GO_SALARY: u32 = 200;
-pub const INCOME_TAX_AMT: u32 = 200;
-pub const LUXURY_TAX_AMT: u32 = 75;
+pub const GO_SALARY: i32 = 200;
+pub const INCOME_TAX_AMT: i32 = 200;
+pub const LUXURY_TAX_AMT: i32 = 75;
 
 /// Objects that can be drawn to the screen with
 /// the Piston/OpenGL framework
@@ -36,12 +63,18 @@ pub trait Render {
 pub enum TurnState {
     StartTurn,
     WaitingForCommand,
+    StartWaitingForCommand,
     InJail,
     ExecutingCommand,
     AfterCommand,
     ConfirmQuit,
     ConfirmPurchase(Rc<RefCell<Property>>),
     ConfirmPlayAgain,
+    ConfirmBuySellHouseHotel,
+    EnterPropIndex,
+    ValidatePropIndex,
+    BuyHouseHotel,
+    SellHouseHotel,
 }
 
 /// Represents a player's choice of action during their turn
@@ -52,6 +85,8 @@ pub enum TurnCommand {
     Assets,
     PayJailFine,
     UseJailCard,
+    HouseHotel,
+    Trade,
     // TODO: add more types of actions (trades, buy/sell houses)
 }
 
@@ -71,6 +106,7 @@ pub struct Game {
     game_state: GameState,
     turn_state: TurnState,
     turn_command: Option<TurnCommand>,
+    key_queue: Vec<u8>,
 }
 
 impl Game {
@@ -78,7 +114,7 @@ impl Game {
         let opengl = OpenGL::V3_2;
         let mut window: GlutinWindow = WindowSettings::new(
             "Rust Monopoly",
-            [WINDOW_WIDTH, WINDOW_HEIGHT]
+            [WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32]
         )
         .opengl(opengl)
         .exit_on_esc(true)
@@ -91,12 +127,22 @@ impl Game {
             game_state: GameState::GameGUISetup,
             turn_state: TurnState::StartTurn,
             turn_command: None,
+            key_queue: Vec::new(),
         }
+    }
+    
+    fn reset_state(&mut self) {
+        self.board = Board::new();
+        self.game_state = GameState::GameGUISetup;
+        self.turn_state = TurnState::StartTurn;
+        self.turn_command = None;
+        self.key_queue = Vec::new();
     }
     
     pub fn setup_game(&mut self) {
         let mut input = String::new();
     
+        self.reset_state();
         self.board.reset_spaces();
         
         println!("Welcome to Monopoly!");
@@ -180,6 +226,16 @@ impl Game {
                     self.turn_command = Some(TurnCommand::Quit);
                 }
             },
+            Key::B => {
+                if self.turn_state == TurnState::ConfirmBuySellHouseHotel {
+                    self.turn_state = TurnState::BuyHouseHotel;
+                }
+            },
+            Key::S => {
+                if self.turn_state == TurnState::ConfirmBuySellHouseHotel {
+                    self.turn_state = TurnState::SellHouseHotel;
+                }
+            },
             Key::Y => {
                 match self.game_state.clone() {
                     GameState::GameOver => {
@@ -212,7 +268,7 @@ impl Game {
                     GameState::GameRun => {
                         match self.turn_state {
                             TurnState::ConfirmQuit => {
-                                self.turn_state = TurnState::WaitingForCommand;
+                                self.turn_state = TurnState::StartWaitingForCommand;
                                 self.turn_command = None;
                             },
                             TurnState::ConfirmPurchase(_) => {
@@ -240,6 +296,31 @@ impl Game {
                     } else {
                         println!("You don't have enough money! Choose another option.");
                     }
+                }
+            },
+            Key::H => {
+                if self.turn_state == TurnState::WaitingForCommand {
+                    self.turn_state = TurnState::ExecutingCommand;
+                    self.turn_command = Some(TurnCommand::HouseHotel);
+                }
+            },
+            Key::D0 |
+            Key::D1 |
+            Key::D2 |
+            Key::D3 |
+            Key::D4 |
+            Key::D5 |
+            Key::D6 |
+            Key::D7 |
+            Key::D8 |
+            Key::D9   => {
+                if self.turn_state == TurnState::EnterPropIndex {
+                    self.key_queue.push(key as u8);
+                }
+            },
+            Key::Return => {
+                if self.turn_state == TurnState::EnterPropIndex {
+                    self.turn_state = TurnState::ValidatePropIndex;
                 }
             },
             _ => self.turn_command = None,
@@ -334,17 +415,32 @@ impl Game {
                 GameState::GameRun => {
                     match self.turn_state {
                         TurnState::StartTurn => {
+                            print!("{}[2J", 27 as char); // clear screen
                             self.board.start_turn();
                             let player = self.board.get_current_player();
                             let player = player.borrow();
                             if player.is_in_jail() {
+                                println!("You are in jail! You can try to roll doubles(R) or \
+                                    pay $50(P).");
                                 self.turn_state = TurnState::InJail;
                             } else {
-                                self.turn_state = TurnState::WaitingForCommand;
+                                self.turn_state = TurnState::StartWaitingForCommand;
                             }
                         },
+                        TurnState::StartWaitingForCommand => {
+                            println!("");
+                            println!("**************************************************");
+                            println!("Please enter a command in the drawing window:");
+                            println!("roll(R)");
+                            println!("quit(Q)");
+                            println!("assets(A)");
+                            println!("houses(H)");
+                            println!("**************************************************");
+                            println!(">> ");
+                            self.turn_state = TurnState::WaitingForCommand;
+                        },
                         TurnState::WaitingForCommand => {
-                            
+                            // do nothing while waiting
                         },
                         TurnState::ExecutingCommand => {
                             if let Some(command) = self.turn_command.clone() {;
@@ -361,7 +457,26 @@ impl Game {
                                     
                                     TurnCommand::Assets => {
                                         self.board.print_player_assets();
-                                        self.turn_state = TurnState::WaitingForCommand;
+                                        self.turn_state = TurnState::StartWaitingForCommand;
+                                    },
+                                    
+                                    TurnCommand::HouseHotel => {
+                                        let player = self.board.get_current_player();
+                                        let monopolies = player.borrow().get_monopolies();
+                                        if monopolies.len() == 0 {
+                                            println!("You have no monopolies on which you \
+                                                      can place houses/hotels.");
+                                            self.turn_state = TurnState::StartWaitingForCommand;
+                                        } else {
+                                            println!("Enter property index, then press ENTER:");
+                                            let mut index = 0;
+                                            for prop in monopolies {
+                                                println!("{}: {}", index, prop.borrow().get_name());
+                                                index += 1;
+                                            }
+                                            self.key_queue = Vec::new();
+                                            self.turn_state = TurnState::EnterPropIndex;
+                                        }
                                     },
                                     
                                     _ => (),
@@ -378,7 +493,7 @@ impl Game {
                                         println!("{} paid $50.", player.borrow().get_name());
                                         player.borrow_mut().tax(50);
                                         player.borrow_mut().unjail();
-                                        self.turn_state = TurnState::WaitingForCommand;
+                                        self.turn_state = TurnState::StartWaitingForCommand;
                                         self.turn_command = None;
                                     },
                                     
@@ -389,7 +504,7 @@ impl Game {
                                         if first == second {
                                             println!("{} rolled doubles and is now free!", player.borrow().get_name());
                                             player.borrow_mut().unjail();
-                                            self.turn_state = TurnState::WaitingForCommand;
+                                            self.turn_state = TurnState::StartWaitingForCommand;
                                             self.turn_command = None;
                                         } else {
                                             println!("{} did not roll doubles and remains in jail!", player.borrow().get_name());
@@ -402,7 +517,7 @@ impl Game {
                                         let player = self.board.get_current_player();
                                         println!("{} used a GOOJFC.", player.borrow().get_name());
                                         player.borrow_mut().unjail();
-                                        self.turn_state = TurnState::WaitingForCommand;
+                                        self.turn_state = TurnState::StartWaitingForCommand;
                                         self.turn_command = None;
                                     },
                                     
@@ -419,6 +534,115 @@ impl Game {
                             }
                             self.board.end_turn();
                             self.turn_state = TurnState::StartTurn;
+                            self.turn_command = None;
+                        },
+                        
+                        TurnState::ValidatePropIndex => {
+                            let index_str = String::from_utf8(self.key_queue.clone()).unwrap();
+                            if let Ok(index) = index_str.parse::<usize>() {
+                                let player = self.board.get_current_player();
+                                let monopolies = player.borrow().get_monopolies();
+                                if index >= monopolies.len() {
+                                    println!("Index must be within range!");
+                                    self.turn_state = TurnState::StartWaitingForCommand;
+                                    self.turn_command = None;
+                                } else {
+                                    println!("Buy(B) or sell(S)?");
+                                    self.turn_state = TurnState::ConfirmBuySellHouseHotel;
+                                }
+                            } else {
+                                println!("Index must be an integer!");
+                                self.turn_state = TurnState::StartWaitingForCommand;
+                                self.turn_command = None;
+                            }
+                        },
+                        
+                        TurnState::BuyHouseHotel => {
+                            let index_str = String::from_utf8(self.key_queue.clone()).unwrap();
+                            let index = index_str.parse::<usize>().unwrap();
+                            let player = self.board.get_current_player();
+                            let monopolies = player.borrow().get_monopolies();
+                            let prop = monopolies[index].clone();
+                            
+                            let num_houses = {
+                                let prop = prop.borrow();
+                                prop.get_num_houses()
+                            };
+                            let num_hotels = {
+                                let prop = prop.borrow();
+                                prop.get_num_hotels()
+                            };
+                            let cash = {
+                                let player = player.borrow();
+                                player.get_cash()
+                            };
+                            
+                            if num_hotels >= MAX_NUM_HOTELS {
+                                println!("{} cannot be further improved!",
+                                          prop.borrow().get_name());
+                            } else if num_houses >= MAX_NUM_HOUSES {
+                                if cash < HOTEL_COST as i32 {
+                                    println!("You cannot afford another hotel!");
+                                } else {
+                                    println!("Bought a hotel on {}!",
+                                    prop.borrow().get_name());
+                                    for _ in 0..4 {
+                                        prop.borrow_mut().remove_house();
+                                    }
+                                    prop.borrow_mut().add_hotel();
+                                    player.borrow_mut().tax(HOTEL_COST);
+                                }
+                            } else {
+                                if cash < HOUSE_COST as i32 {
+                                    println!("You cannot afford another house!");
+                                } else {
+                                    println!("Bought a house on {}!",
+                                              prop.borrow().get_name());
+                                    prop.borrow_mut().add_house();
+                                    player.borrow_mut().tax(HOUSE_COST);
+                                }          
+                            }
+                            self.turn_state = TurnState::StartWaitingForCommand;
+                            self.turn_command = None;
+                        },
+                        
+                        TurnState::SellHouseHotel => {
+                            let index_str = String::from_utf8(self.key_queue.clone()).unwrap();
+                            let index = index_str.parse::<usize>().unwrap();
+                            let player = self.board.get_current_player();
+                            let monopolies = player.borrow().get_monopolies();
+                            let prop = monopolies[index].clone();
+                            
+                            let num_hotels = {
+                                let prop = prop.borrow();
+                                prop.get_num_hotels()
+                            };
+                            let num_houses = {
+                                let prop = prop.borrow();
+                                prop.get_num_houses()
+                            };
+                            
+                            if num_hotels >= 1 {
+                                println!("Sold a hotel on {}!", prop.borrow().get_name());
+                                prop.borrow_mut().remove_hotel();
+                                player.borrow_mut().salary(HOTEL_COST / 2);
+                                let new_num_hotels = {
+                                    prop.borrow().get_num_hotels()
+                                };
+                                if new_num_hotels == 0 {
+                                    for _ in 0..4 {
+                                        prop.borrow_mut().add_house();
+                                    }
+                                }
+                            } else if num_houses >= 1 {
+                                println!("Sold a house on {}!", prop.borrow().get_name());
+                                prop.borrow_mut().remove_house();
+                                let player = self.board.get_current_player();
+                                player.borrow_mut().salary(HOUSE_COST / 2);
+                            } else {
+                                println!("No houses to remove on {}!", prop.borrow().get_name());
+                            }
+                            self.turn_state = TurnState::StartWaitingForCommand;
                             self.turn_command = None;
                         },
                         

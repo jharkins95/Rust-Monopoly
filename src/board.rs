@@ -1,3 +1,14 @@
+//
+//! Board keeps track of most of the game state local to the Monopoly
+//! board, including the spaces (and properties contained within them),
+//! the players, the card decks, and the background board image.
+//!
+//! Most of the methods in Board do not take in a current player
+//! argument since this is already determined by the player_turn
+//! field in Board.
+//!
+
+
 extern crate rand;
 extern crate graphics;
 extern crate glutin_window;
@@ -26,8 +37,6 @@ const TOTAL_NUM_HOTELS: i32 = 12;
 const NUM_SPACES: usize = 40;
 const MAX_NUM_PLAYERS: i32 = 6;
 
-/// A Board contains all useful game state (players, spaces, properties)
-//#[derive(Debug)]
 pub struct Board {
     unclaimed_houses: i32,
     unclaimed_hotels: i32,
@@ -54,6 +63,8 @@ impl Board {
             passed_go: false,
         }
     }
+    
+
     
     pub fn shuffle_chance(&mut self) {
         self.chance_cards = Vec::new();
@@ -84,7 +95,6 @@ impl Board {
         order_to_card.insert(rng.gen_range(1, 10000000), CommunityChest::BankErrorInYourFavor);
         order_to_card.insert(rng.gen_range(1, 10000000), CommunityChest::GoToJail);
         order_to_card.insert(rng.gen_range(1, 10000000), CommunityChest::PaySchoolFees);
-        order_to_card.insert(rng.gen_range(1, 10000000), CommunityChest::GetOutOfJailFree);
         
         for (_, card) in order_to_card {
             self.comm_chest_cards.push(card);
@@ -97,17 +107,10 @@ impl Board {
             self.end_turn();
             player = self.get_current_player();
         }
-        println!("");
+
         println!("It is {}'s turn. You have ${}.",
                  player.borrow().get_name(),
                  player.borrow().get_cash());
-        
-        if player.borrow().is_in_jail() {
-            println!("You are in jail! You can try to roll doubles(R), \
-                      pay $50(P), or use a Get Out of Jail Free Card(C).");
-        } else {
-            println!("Please enter a command: roll(R), quit(Q), assets(A)");
-        }
         
         player.borrow_mut().set_creditor(None);
         player.borrow_mut().set_turn(true);
@@ -178,7 +181,7 @@ impl Board {
         prop.borrow_mut().set_owner(Some(buyer.clone()));
     }
     
-    pub fn on_land_go(&mut self, salary: u32) {
+    pub fn on_land_go(&mut self, salary: i32) {
         println!("You landed on GO! Collect ${}.", salary);
         self.players[self.player_turn].borrow_mut().salary(salary);
     }
@@ -279,8 +282,36 @@ impl Board {
     }
     
     pub fn on_land_comm_chest(&mut self) {
+        if self.comm_chest_cards.len() == 0 {
+            self.shuffle_comm_chest();
+        }
         println!("Landed on Community Chest");
-        // TODO: handle comm. chest
+        let card = self.comm_chest_cards.pop().unwrap();
+        let player = self.get_current_player();
+        
+        match card {
+            CommunityChest::AdvanceToGo => {
+                let space = self.get_space(GO);
+                println!("Advance to GO!");
+                self.advance_to(space.clone());
+            },
+            CommunityChest::BankErrorInYourFavor => {
+                println!("Bank error in your favor! Collect $200.");
+                player.borrow_mut().salary(200);
+            },
+            CommunityChest::GoToJail => {
+                println!("Go to jail!");
+                let gtj = player.borrow().get_space();
+                let jail = self.get_space(10).clone();
+                gtj.borrow_mut().remove_player(player.clone());
+                jail.borrow_mut().add_player(player.clone());
+                player.borrow_mut().jail(self.spaces[JAIL].clone());
+            },
+            CommunityChest::PaySchoolFees => {
+                println!("Pay school fees of $50!");
+                player.borrow_mut().tax(50);
+            },
+        };
     }
     
     pub fn on_land_jail(&mut self) {
@@ -292,7 +323,7 @@ impl Board {
         // TODO: add free parking salary??
     }
     
-    pub fn get_rent(&self, property: Rc<RefCell<Property>>) -> u32 {
+    pub fn get_rent(&self, property: Rc<RefCell<Property>>) -> i32 {
         let color_group = property.borrow().get_color_group();
         let base_rent = property.borrow().get_base_rent();
         let owner = {
@@ -300,7 +331,9 @@ impl Board {
             property.get_owner().clone()
         };    
         let num_props = owner.borrow().get_num_props(&color_group);
-        let has_monopoly = owner.borrow().has_monopoly(&color_group);
+        let has_monopoly = owner.borrow().has_monopoly(color_group.clone());
+        let num_houses = property.borrow().get_num_houses();
+        let num_hotels = property.borrow().get_num_hotels();
         match color_group {
             ColorGroup::Railroad => {
                 match num_props {
@@ -320,7 +353,13 @@ impl Board {
             },
             _ => {
                 if has_monopoly {
-                    base_rent * 3
+                    if num_hotels >= 1 {
+                        base_rent * num_hotels as i32 * 40
+                    } else if num_houses >= 1 {
+                        base_rent * num_houses as i32 * 5
+                    } else {
+                        base_rent * 3
+                    }
                 } else {
                     base_rent
                 }
@@ -328,7 +367,7 @@ impl Board {
         }
     }
     
-    pub fn on_land_go_to_jail(&mut self, go_salary: u32) {
+    pub fn on_land_go_to_jail(&mut self, go_salary: i32) {
         println!("Go to jail! Go directly to jail! Do not pass \
                   GO! Do not collect ${}!", go_salary);   
         let player = self.get_current_player();
@@ -336,16 +375,16 @@ impl Board {
         let jail = self.get_space(10).clone();
         gtj.borrow_mut().remove_player(player.clone());
         jail.borrow_mut().add_player(player.clone());
-        player.borrow_mut().jail(self.spaces[10].clone());
+        player.borrow_mut().jail(self.spaces[JAIL].clone());
     }
     
-    pub fn on_land_income_tax(&mut self, tax: u32) {
+    pub fn on_land_income_tax(&mut self, tax: i32) {
         println!("Income tax! Pay ${}.", tax);
         let player = self.get_current_player();
         player.borrow_mut().tax(tax);
     }
     
-    pub fn on_land_luxury_tax(&mut self, tax: u32) {
+    pub fn on_land_luxury_tax(&mut self, tax: i32) {
         println!("Luxury tax! Pay ${}.", tax);
         let player = self.get_current_player();
         player.borrow_mut().tax(tax);
@@ -416,7 +455,7 @@ impl Board {
         let space = space.borrow(); // why Rust?? why??
         space.get_index()
     }
-
+    
     pub fn reset_spaces(&mut self) {  
         let go = Space::new(SpaceEnum::Go, 522, 520, GO);
         let med_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
@@ -520,7 +559,7 @@ impl Board {
                                   "Atlantic Avenue".to_string(),
                                   260,
                                   22,
-                                  ColorGroup::DarkPurple)))), 328, 4, ATL_AVE);      
+                                  ColorGroup::Yellow)))), 328, 4, ATL_AVE);      
         let ventnor_ave = Space::new(SpaceEnum::Prop ( Rc::new(RefCell::new(Property::new(
                                   "Ventnor Avenue".to_string(),
                                   260,

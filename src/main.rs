@@ -1,3 +1,9 @@
+//
+//! CIS 198 - Rust Programming
+//! Author: Jack Harkins
+//! Project Name: Rust-Monopoly
+//!
+
 extern crate piston;
 extern crate graphics;
 extern crate glutin_window;

@@ -1,3 +1,10 @@
+//
+//! Space stores the player(s) who currently are landed on
+//! the space, if any. It also acts as a container for Properties
+//! since every property is a space on the board (the converse isn't
+//! necessarily true)
+//!
+
 extern crate rand;
 extern crate graphics;
 extern crate glutin_window;
@@ -20,6 +27,7 @@ use super::board::*;
 use super::property::*;
 use super::game::*;
 
+/// Space indices
 pub const GO: usize = 0;
 pub const MED_AVE: usize = 1;
 pub const COMM_CHEST_BOT: usize = 2;
@@ -61,6 +69,7 @@ pub const PARK_PL: usize = 37;
 pub const LUXURY_TAX: usize = 38;
 pub const BDWK: usize = 39;
 
+/// Represents the type of a space (property, tax, card draw, jail, etc.)
 #[derive(Debug, Clone)]
 pub enum SpaceEnum {
     Prop(Rc<RefCell<Property>>),
@@ -100,11 +109,14 @@ impl Space {
         self.players.push(player.clone());
     }
     
+    /// Removes a player from the space 
+    // (there's no remove() method in Vec other than removing by index)
     pub fn remove_player(&mut self, other: Rc<RefCell<Player>>) {
         for i in 0..self.players.len() {
             if self.players[i] == other {
                 self.players.remove(i);
-                break;
+                break; // otherwise, would lead to the index going
+                       // out of bounds
             }
         }
     }
@@ -128,22 +140,59 @@ impl Space {
 
 impl Render for Space {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
-        let mut offset = 0;
-        for player in &self.players {
+        use graphics::*;
         
-            use graphics::*;
+        let house_width: f64 = 5.0;
+        let house_height: f64 = 5.0;
+        let hotel_width: f64 = 10.0;
+        let hotel_height: f64 = 5.0;
+        
+        let mut offset: f64 = 0.0;
+        if let SpaceEnum::Prop(prop) = self.s_type.clone() {
+            let num_houses = prop.borrow().get_num_houses();
+            let num_hotels = prop.borrow().get_num_hotels();
+            
+            // houses and hotels are mutually exclusive
+            for _ in 0..num_houses {
+                let house: [graphics::types::Scalar; 4] = 
+                    [self.x as f64, 
+                     self.y as f64, 
+                     house_width, 
+                     house_height];
+                gl.draw(args.viewport(), |c, gl| {
+                    let transform = c.transform.trans(offset as f64, 0 as f64);
+                    rectangle(GREEN, house, transform, gl);
+                });
+                offset += house_width + 1.0; // border between houses
+            }
+            for _ in 0..num_hotels {
+                let hotel: [graphics::types::Scalar; 4] = 
+                    [self.x as f64, 
+                     self.y as f64, 
+                     hotel_width, 
+                     hotel_height];
+                gl.draw(args.viewport(), |c, gl| {
+                    let transform = c.transform.trans(offset as f64, 0 as f64);
+                    rectangle(RED, hotel, transform, gl);
+                });
+                offset = offset + hotel_width + 1.0;
+            }
+        }
+        
+        offset = 0.0;
+        let num_players = &self.players.len();
+        for player in &self.players {
             let player = player.borrow();
-            let x = self.get_x();
-            let y = self.get_y();
-            let token = rectangle::square(x as f64, 
-                                          y as f64, 
+            let token = rectangle::square(self.x as f64, 
+                                          self.y as f64, 
                                           PLAYER_WIDTH as f64);
 
             gl.draw(args.viewport(), |c, gl| {
-                let transform = c.transform.trans(0 as f64, offset as f64);
+                let transform = c.transform.trans(0 as f64, 
+                                                  house_height + 1 as f64 + offset as f64);
                 rectangle(player.get_token_color(), token, transform, gl);
             });
-            offset += PLAYER_WIDTH;
+            offset += PLAYER_WIDTH as f64;
         }
     }
 }
