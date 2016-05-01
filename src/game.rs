@@ -158,6 +158,7 @@ impl Game {
 
             loop {
                 name = get_string();
+                name = name.trim().to_string();
                 let mut valid_name: bool = true;
                 for (_, player) in &turns_to_players {
                     if name == player.borrow().get_name() {
@@ -429,7 +430,7 @@ impl Game {
                 GameState::GameRun => {
                     match self.turn_state {
                         TurnState::StartTurn => {
-                            print!("{}[2J", 27 as char); // clear screen
+                            //print!("{}[2J", 27 as char); // clear screen
                             self.board.start_turn();
                             let player = self.board.get_current_player();
                             let player = player.borrow();
