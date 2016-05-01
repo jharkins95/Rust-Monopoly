@@ -12,18 +12,12 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate core;
 
-use std::io::{self, Write};
-use std::collections::BTreeMap;
 use std::rc::Rc;
-use std::fmt;
 use std::cell::RefCell;
-use rand::Rng;
 use piston::input::*;
-use opengl_graphics::{GlGraphics, Texture};
-use std::path::Path;
+use opengl_graphics::GlGraphics;
 
 use super::player::*;
-use super::board::*;
 use super::property::*;
 use super::game::*;
 
@@ -180,7 +174,6 @@ impl Render for Space {
         }
         
         offset = 0.0;
-        let num_players = &self.players.len();
         for player in &self.players {
             let player = player.borrow();
             let token = rectangle::square(self.x as f64, 

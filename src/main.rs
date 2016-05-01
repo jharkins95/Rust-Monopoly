@@ -4,6 +4,10 @@
 //! Project Name: Rust-Monopoly
 //!
 
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_must_use)]
+
 extern crate piston;
 extern crate graphics;
 extern crate glutin_window;

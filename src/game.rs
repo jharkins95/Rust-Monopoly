@@ -112,7 +112,7 @@ pub struct Game {
 impl Game {
     pub fn new() -> Game {
         let opengl = OpenGL::V3_2;
-        let mut window: GlutinWindow = WindowSettings::new(
+        let window: GlutinWindow = WindowSettings::new(
             "Rust Monopoly",
             [WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32]
         )
@@ -140,8 +140,6 @@ impl Game {
     }
     
     pub fn setup_game(&mut self) {
-        let mut input = String::new();
-    
         self.reset_state();
         self.board.reset_spaces();
         
@@ -155,8 +153,24 @@ impl Game {
         let mut turns_to_players: BTreeMap<i32, Rc<RefCell<Player>>> 
             = BTreeMap::new();
         for i in 0..num_players {
-            print!("Please enter Player {}'s name: ", i + 1);
-            let mut name = get_string();
+            print!("Please enter Player {}'s name: ", i + 1); 
+            let mut name;
+
+            loop {
+                name = get_string();
+                let mut valid_name: bool = true;
+                for (_, player) in &turns_to_players {
+                    if name == player.borrow().get_name() {
+                        println!("That name is already chosen! Pick another name");
+                        valid_name = false;
+                    }
+                }
+                if valid_name {
+                    break;
+                }
+               
+            }
+                
             
             let mut color;
             print!("Choose a color (ROYGBV): ");
@@ -175,7 +189,7 @@ impl Game {
             }
             
             
-            let mut go = self.board.get_space(0);
+            let go = self.board.get_space(GO);
             let player = Rc::new(RefCell::new(
                 Player::new(name.trim().to_string(), 
                             go.clone(), 

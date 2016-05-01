@@ -7,18 +7,13 @@
 
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::cmp::Ordering;
-use piston::input::*;
-use opengl_graphics::GlGraphics;
 
 use super::property::*;
-use super::board::*;
 use super::space::*;
 
 const STARTING_CASH: i32 = 1500;
 pub const PLAYER_WIDTH: i32 = 10;
 
-pub const WHITE:  [f32; 4] = [1.0; 4];
 pub const RED:    [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const ORANGE: [f32; 4] = [1.0, 153.0/255.0, 0.0, 1.0];
 pub const YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];

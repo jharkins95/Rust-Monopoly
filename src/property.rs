@@ -9,7 +9,6 @@ use std::cell::RefCell;
 use piston::input::*;
 use opengl_graphics::GlGraphics;
 
-use super::board::*;
 use super::player::*;
 use super::game::*;
 

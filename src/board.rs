@@ -19,7 +19,6 @@ extern crate core;
 use std::io::{self, Write};
 use std::collections::BTreeMap;
 use std::rc::Rc;
-use std::fmt;
 use std::cell::RefCell;
 use rand::Rng;
 use piston::input::*;
@@ -32,14 +31,10 @@ use super::game::*;
 use super::cards::*;
 use super::space::*;
 
-const TOTAL_NUM_HOUSES: i32 = 32;
-const TOTAL_NUM_HOTELS: i32 = 12;
 const NUM_SPACES: usize = 40;
 const MAX_NUM_PLAYERS: i32 = 6;
 
 pub struct Board {
-    unclaimed_houses: i32,
-    unclaimed_hotels: i32,
     spaces: Vec<Rc<RefCell<Space>>>,
     players: Vec<Rc<RefCell<Player>>>,
     player_turn: usize, // index into playerss
@@ -52,8 +47,6 @@ pub struct Board {
 impl Board {
     pub fn new() -> Board {
         Board {
-            unclaimed_houses: TOTAL_NUM_HOUSES,
-            unclaimed_hotels: TOTAL_NUM_HOTELS,
             spaces: Vec::with_capacity(NUM_SPACES),
             players: Vec::new(),
             player_turn: 0,
@@ -119,14 +112,14 @@ impl Board {
     /// Debtor is assumed to be the current player
     pub fn on_rent_collected(&mut self, owner: Rc<RefCell<Player>>,
                              prop: Rc<RefCell<Property>>) {
-        let mut debtor = self.players[self.player_turn].clone();
+        let debtor = self.players[self.player_turn].clone();
         let rent = self.get_rent(prop.clone());
         owner.borrow_mut().collect_rent(debtor.clone(), rent);
         debtor.borrow_mut().set_creditor(Some(owner.clone()));
     }
     
     pub fn handle_bankruptcy(&mut self) {
-        let mut debtor = self.get_current_player();
+        let debtor = self.get_current_player();
         if debtor.borrow().is_bankrupt() {
             println!("{} is bankrupt!", debtor.borrow().get_name());
             let creditor = {
@@ -401,7 +394,6 @@ impl Board {
         println!("{} rolled a {}.",
                  player.borrow().get_name(),
                  dice_roll);
-        let old_space = player.borrow().get_space();
         let old_player_index = self.get_player_index();
         let new_raw_index = old_player_index + dice_roll;
         if new_raw_index >= self.spaces.len() {
@@ -415,9 +407,7 @@ impl Board {
     pub fn advance_to(&mut self, new_space: Rc<RefCell<Space>>) -> LandAction {
         let player = self.get_current_player();
         let old_space = player.borrow().get_space();
-        let old_player_index = old_space.borrow().get_index();
         old_space.borrow_mut().remove_player(player.clone());
-        let new_player_index = new_space.borrow().get_index();
         new_space.borrow_mut().add_player(player.clone());
         
         if self.passed_go {
@@ -690,7 +680,7 @@ impl Render for Board {
 
 pub fn get_token_color() -> usize {
     loop {
-        let mut color = get_string();
+        let color = get_string();
         match &(*color.trim().to_lowercase()) {
             "red" => return 0,
             "orange" => return 1,
@@ -713,7 +703,7 @@ pub fn get_string() -> String {
 /// Get a yes/no answer from stdin
 pub fn confirm_prompt() -> bool {
     loop {
-        let mut input = get_string();
+        let input = get_string();
         match &(*input.trim().to_lowercase()) {
             "yes" => return true,
             "no"  => return false,
@@ -724,7 +714,7 @@ pub fn confirm_prompt() -> bool {
 
 pub fn get_turn_action() -> TurnCommand {
     loop {
-        let mut input = get_string();
+        let input = get_string();
         match &(*input.trim().to_lowercase()) {
             "roll" => return TurnCommand::Roll,
             "quit"  => return TurnCommand::Quit,
@@ -744,7 +734,7 @@ pub fn get_int() -> i32 {
         io::stdin().read_line(&mut input).unwrap();
         match i32::from_str(&(input.trim())) {
             Ok(n) => return n,
-            Err(e) => print!("Please enter an integer: "),
+            Err(_) => print!("Please enter an integer: "),
         }
     }
 }
