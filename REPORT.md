@@ -28,9 +28,9 @@ Accomplishments
 ---------------
 
 * Able to draw the board, player tokens, and houses/hotels on screen with the Piston OpenGL framework
-- Comment: Piston's drawing API is simple and doesn't allow you to put text easily on the screen, so I had to manually insert the text into the board image using GIMP.
+     - Comment: Piston's drawing API is simple and doesn't allow you to put text easily on the screen, so I had to manually insert the text into the board image using GIMP.
 * Mechanism to handle actions taken by the player on their turn (see the relevant state structs in game.rs)
-- Comment: This was probably the trickiest part of implementing the game. I was originally just having the players enter commands into the console, but this prevented the game from rendering properly.
+     - Comment: This was probably the trickiest part of implementing the game. I was originally just having the players enter commands into the console, but this prevented the game from rendering properly.
 * Able to move players around the board, collect rents, buy properties, and play the game (see Summary above).
 
 Components
