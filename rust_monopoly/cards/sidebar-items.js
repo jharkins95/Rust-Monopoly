@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Chance","Represents a Chance card"],["CommunityChest","Represents a Community Chest card"]]});

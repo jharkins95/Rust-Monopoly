@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `game` mod in crate `rust_monopoly`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, game">
+
+    <title>rust_monopoly::game - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>rust_monopoly</a></p><script>window.sidebarCurrent = {name: 'game', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>rust_monopoly</a>::<wbr><a class='mod' href=''>game</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-636' class='srclink' href='../../src/rust_monopoly/src/game.rs.html#2-702' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>The Game struct stores the entirety of the game state, including the
+game board, whether the game is running or not, 
+the current state of a player&#39;s turn, and the player&#39;s command.
+It also stores the window in which game objects are drawn.</p>
+
+<p>The game proceeds as follows:
+1. Player prompted for action.
+2. Player enters key corresponding to action in the console.
+3. Game executes the player&#39;s action.
+4. If the game requires a response to the action (such as landing on
+   unowned property), the player will be prompted to respond by
+   typing a key in the window.
+5. After the player&#39;s turn is finished, the game will check if they
+   are bankrupt. If so, the player&#39;s assets will be transferred to
+   the creditor (or the bank if there is no creditor). The bankrupt
+   player will no longer be able to trade properties, collect rents,
+   or otherwise participate in the game.
+6. The last remaining player wins the game.</p>
+
+<p>During the course of the game, the Game will notify its Board that 
+the next player is ready to begin his turn via board.start_turn().
+When the player lands, the Board will return a LandAction to the Game,
+representing the type of action taken upon landing (buying/selling/
+renting/etc); see LandAction for more details.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>extern crate opengl_graphics;</code></td></tr><tr><td><code>extern crate piston;</code></td></tr><tr><td><code>extern crate glutin_window;</code></td></tr><tr><td><code>use std::prelude::<a class='mod' href='https://doc.rust-lang.org/nightly/std/prelude/v1/index.html' title='std::prelude::v1'>v1</a>::*;</code></td></tr><tr><td><code>use std::collections::<a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>;</code></td></tr><tr><td><code>use glutin_window::GlutinWindow;</code></td></tr><tr><td><code>use std::<a class='mod' href='https://doc.rust-lang.org/nightly/std/process/index.html' title='std::process'>process</a>;</code></td></tr><tr><td><code>use piston::window::WindowSettings;</code></td></tr><tr><td><code>use piston::event_loop::*;</code></td></tr><tr><td><code>use piston::input::*;</code></td></tr><tr><td><code>use std::rc::<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>;</code></td></tr><tr><td><code>use std::cell::<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>;</code></td></tr><tr><td><code>use opengl_graphics::{GlGraphics, OpenGL};</code></td></tr><tr><td><code>use super::<a class='mod' href='../../rust_monopoly/board/index.html' title='rust_monopoly::board'>board</a>::*;</code></td></tr><tr><td><code>use super::<a class='mod' href='../../rust_monopoly/player/index.html' title='rust_monopoly::player'>player</a>::*;</code></td></tr><tr><td><code>use super::<a class='mod' href='../../rust_monopoly/property/index.html' title='rust_monopoly::property'>property</a>::*;</code></td></tr><tr><td><code>use super::<a class='mod' href='../../rust_monopoly/space/index.html' title='rust_monopoly::space'>space</a>::*;</code></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Game.html'
+                               title='rust_monopoly::game::Game'>Game</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                </table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.GameState.html'
+                               title='rust_monopoly::game::GameState'>GameState</a></td>
+                        <td class='docblock short'>
+                             <p>Master game state: is the game running/set up/over?</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.TurnCommand.html'
+                               title='rust_monopoly::game::TurnCommand'>TurnCommand</a></td>
+                        <td class='docblock short'>
+                             <p>Represents a player&#39;s choice of action during their turn</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.TurnState.html'
+                               title='rust_monopoly::game::TurnState'>TurnState</a></td>
+                        <td class='docblock short'>
+                             <p>Represents the different stages in a player&#39;s turn</p>
+                        </td>
+                    </tr>
+                </table><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.GO_SALARY.html'
+                               title='rust_monopoly::game::GO_SALARY'>GO_SALARY</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.INCOME_TAX_AMT.html'
+                               title='rust_monopoly::game::INCOME_TAX_AMT'>INCOME_TAX_AMT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.LUXURY_TAX_AMT.html'
+                               title='rust_monopoly::game::LUXURY_TAX_AMT'>LUXURY_TAX_AMT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.WINDOW_HEIGHT.html'
+                               title='rust_monopoly::game::WINDOW_HEIGHT'>WINDOW_HEIGHT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.WINDOW_WIDTH.html'
+                               title='rust_monopoly::game::WINDOW_WIDTH'>WINDOW_WIDTH</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                </table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.Render.html'
+                               title='rust_monopoly::game::Render'>Render</a></td>
+                        <td class='docblock short'>
+                             <p>Objects that can be drawn to the screen with
+the Piston/OpenGL framework</p>
+                        </td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "rust_monopoly";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

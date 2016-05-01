@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `rust_monopoly` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, rust_monopoly">
+
+    <title>rust_monopoly - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'rust_monopoly', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>rust_monopoly</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-0' class='srclink' href='../src/rust_monopoly/src/main.rs.html#2-27' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>CIS 198 - Rust Programming
+Author: Jack Harkins
+Project Name: Rust-Monopoly</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>extern crate std as std;</code></td></tr><tr><td><code>extern crate piston;</code></td></tr><tr><td><code>extern crate graphics;</code></td></tr><tr><td><code>extern crate glutin_window;</code></td></tr><tr><td><code>extern crate opengl_graphics;</code></td></tr><tr><td><code>extern crate rand;</code></td></tr><tr><td><code>use std::prelude::<a class='mod' href='https://doc.rust-lang.org/nightly/std/prelude/v1/index.html' title='std::prelude::v1'>v1</a>::*;</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='board/index.html'
+                               title='rust_monopoly::board'>board</a></td>
+                        <td class='docblock short'>
+                             <p>Board keeps track of most of the game state local to the Monopoly
+board, including the spaces (and properties contained within them),
+the players, the card decks, and the background board image.</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='cards/index.html'
+                               title='rust_monopoly::cards'>cards</a></td>
+                        <td class='docblock short'>
+                             <p>Cards are used whenever a player lands on a Chance or a
+Community Chest space. They are meant to be randomly ordered and
+drawn from a Vector in the Board struct.</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='game/index.html'
+                               title='rust_monopoly::game'>game</a></td>
+                        <td class='docblock short'>
+                             <p>The Game struct stores the entirety of the game state, including the
+game board, whether the game is running or not, 
+the current state of a player&#39;s turn, and the player&#39;s command.
+It also stores the window in which game objects are drawn.</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='player/index.html'
+                               title='rust_monopoly::player'>player</a></td>
+                        <td class='docblock short'>
+                             <p>Player stores the player&#39;s properties, their token color,
+the space the player is currently landed on, the last creditor
+the player paid rent to, whether the player is in jail,
+and whether the player is currently up for his turn.</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='property/index.html'
+                               title='rust_monopoly::property'>property</a></td>
+                        <td class='docblock short'>
+                             <p>Contains the majority of the state associated with owning
+a property, such as its name, the number of houses and hotels
+held on it, its base rent, and the color group it belongs to.</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='mod' href='space/index.html'
+                               title='rust_monopoly::space'>space</a></td>
+                        <td class='docblock short'>
+                             <p>Space stores the player(s) who currently are landed on
+the space, if any. It also acts as a container for Properties
+since every property is a space on the board (the converse isn&#39;t
+necessarily true)</p>
+                        </td>
+                    </tr>
+                </table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.main.html'
+                               title='rust_monopoly::main'>main</a></td>
+                        <td class='docblock short'>
+                             <p>The main entry point for the application</p>
+                        </td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "rust_monopoly";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

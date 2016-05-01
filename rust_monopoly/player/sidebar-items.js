@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["BLUE",""],["GREEN",""],["ORANGE",""],["PLAYER_WIDTH",""],["PURPLE",""],["RED",""],["STARTING_CASH",""],["YELLOW",""]],"enum":[["LandAction","An action the player takes upon landing on a property"]],"struct":[["Player",""]]});

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Player` struct in crate `rust_monopoly`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Player">
+
+    <title>rust_monopoly::player::Player - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>rust_monopoly</a>::<wbr><a href='index.html'>player</a></p><script>window.sidebarCurrent = {name: 'Player', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>rust_monopoly</a>::<wbr><a href='index.html'>player</a>::<wbr><a class='struct' href=''>Player</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-373' class='srclink' href='../../src/rust_monopoly/src/player.rs.html#35-45' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Player {
+    name: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>,
+    cash: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>,
+    in_jail: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    has_turn: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    space: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/space/struct.Space.html' title='rust_monopoly::space::Space'>Space</a>&gt;&gt;,
+    properties: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/property/struct.Property.html' title='rust_monopoly::property::Property'>Property</a>&gt;&gt;&gt;,
+    token_color: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.array.html'>[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f32.html'>f32</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.array.html'>; 4]</a>,
+    creditor: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a>&gt;&gt;&gt;,
+}</pre><h2 class='fields'>Fields</h2>
+<table><tr class='stab '>
+                                  <td id='structfield.name'><code>name</code></td><td></td></tr><tr class='stab '>
+                                  <td id='structfield.cash'><code>cash</code></td><td></td></tr><tr class='stab '>
+                                  <td id='structfield.in_jail'><code>in_jail</code></td><td></td></tr><tr class='stab '>
+                                  <td id='structfield.has_turn'><code>has_turn</code></td><td></td></tr><tr class='stab '>
+                                  <td id='structfield.space'><code>space</code></td><td></td></tr><tr class='stab '>
+                                  <td id='structfield.properties'><code>properties</code></td><td></td></tr><tr class='stab '>
+                                  <td id='structfield.token_color'><code>token_color</code></td><td></td></tr><tr class='stab '>
+                                  <td id='structfield.creditor'><code>creditor</code></td><td></td></tr></table><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a></code></h3><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>(name: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>, start_space: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/space/struct.Space.html' title='rust_monopoly::space::Space'>Space</a>&gt;&gt;, token_color: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.array.html'>[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f32.html'>f32</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.array.html'>; 4]</a>) -&gt; <a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a></code></h4>
+<h4 id='method.get_token_color' class='method'><code>fn <a href='#method.get_token_color' class='fnname'>get_token_color</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.array.html'>[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f32.html'>f32</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.array.html'>; 4]</a></code></h4>
+<h4 id='method.set_creditor' class='method'><code>fn <a href='#method.set_creditor' class='fnname'>set_creditor</a>(&amp;mut self, creditor: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a>&gt;&gt;&gt;)</code></h4>
+<h4 id='method.get_creditor' class='method'><code>fn <a href='#method.get_creditor' class='fnname'>get_creditor</a>(&amp;self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a>&gt;&gt;&gt;</code></h4>
+<h4 id='method.get_property' class='method'><code>fn <a href='#method.get_property' class='fnname'>get_property</a>(&amp;self, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/property/struct.Property.html' title='rust_monopoly::property::Property'>Property</a>&gt;&gt;&gt;</code></h4>
+<h4 id='method.has_property' class='method'><code>fn <a href='#method.has_property' class='fnname'>has_property</a>(&amp;self, name: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<h4 id='method.has_monopoly' class='method'><code>fn <a href='#method.has_monopoly' class='fnname'>has_monopoly</a>(&amp;self, group: <a class='enum' href='../../rust_monopoly/property/enum.ColorGroup.html' title='rust_monopoly::property::ColorGroup'>ColorGroup</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<h4 id='method.get_monopolies' class='method'><code>fn <a href='#method.get_monopolies' class='fnname'>get_monopolies</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/property/struct.Property.html' title='rust_monopoly::property::Property'>Property</a>&gt;&gt;&gt;</code></h4>
+<div class='docblock'><p>Get all properties of the player that are in a monopoly
+not counting railroads/utils; can&#39;t put houses and hotels on those</p>
+</div><h4 id='method.land' class='method'><code>fn <a href='#method.land' class='fnname'>land</a>(&amp;mut self, space: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/space/struct.Space.html' title='rust_monopoly::space::Space'>Space</a>&gt;&gt;) -&gt; <a class='enum' href='../../rust_monopoly/player/enum.LandAction.html' title='rust_monopoly::player::LandAction'>LandAction</a></code></h4>
+<h4 id='method.has_monopoly_cg' class='method'><code>fn <a href='#method.has_monopoly_cg' class='fnname'>has_monopoly_cg</a>(&amp;self, color_group: &amp;<a class='enum' href='../../rust_monopoly/property/enum.ColorGroup.html' title='rust_monopoly::property::ColorGroup'>ColorGroup</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<h4 id='method.get_properties' class='method'><code>fn <a href='#method.get_properties' class='fnname'>get_properties</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/property/struct.Property.html' title='rust_monopoly::property::Property'>Property</a>&gt;&gt;&gt;</code></h4>
+<h4 id='method.add_property' class='method'><code>fn <a href='#method.add_property' class='fnname'>add_property</a>(&amp;mut self, property: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/property/struct.Property.html' title='rust_monopoly::property::Property'>Property</a>&gt;&gt;)</code></h4>
+<h4 id='method.purchase' class='method'><code>fn <a href='#method.purchase' class='fnname'>purchase</a>(&amp;mut self, property: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/property/struct.Property.html' title='rust_monopoly::property::Property'>Property</a>&gt;&gt;)</code></h4>
+<h4 id='method.salary' class='method'><code>fn <a href='#method.salary' class='fnname'>salary</a>(&amp;mut self, salary: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>)</code></h4>
+<h4 id='method.tax' class='method'><code>fn <a href='#method.tax' class='fnname'>tax</a>(&amp;mut self, tax: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>)</code></h4>
+<h4 id='method.get_space' class='method'><code>fn <a href='#method.get_space' class='fnname'>get_space</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/space/struct.Space.html' title='rust_monopoly::space::Space'>Space</a>&gt;&gt;</code></h4>
+<h4 id='method.get_name' class='method'><code>fn <a href='#method.get_name' class='fnname'>get_name</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a></code></h4>
+<h4 id='method.get_cash' class='method'><code>fn <a href='#method.get_cash' class='fnname'>get_cash</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+<h4 id='method.is_bankrupt' class='method'><code>fn <a href='#method.is_bankrupt' class='fnname'>is_bankrupt</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<h4 id='method.jail' class='method'><code>fn <a href='#method.jail' class='fnname'>jail</a>(&amp;mut self, space: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/space/struct.Space.html' title='rust_monopoly::space::Space'>Space</a>&gt;&gt;)</code></h4>
+<h4 id='method.unjail' class='method'><code>fn <a href='#method.unjail' class='fnname'>unjail</a>(&amp;mut self)</code></h4>
+<h4 id='method.is_in_jail' class='method'><code>fn <a href='#method.is_in_jail' class='fnname'>is_in_jail</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<h4 id='method.set_turn' class='method'><code>fn <a href='#method.set_turn' class='fnname'>set_turn</a>(&amp;mut self, turn: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>)</code></h4>
+<h4 id='method.print_assets' class='method'><code>fn <a href='#method.print_assets' class='fnname'>print_assets</a>(&amp;self)</code></h4>
+<h4 id='method.collect_rent' class='method'><code>fn <a href='#method.collect_rent' class='fnname'>collect_rent</a>(&amp;mut self, other: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>&lt;<a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a>&gt;&gt;, rent: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a>)</code></h4>
+<h4 id='method.get_num_props' class='method'><code>fn <a href='#method.get_num_props' class='fnname'>get_num_props</a>(&amp;self, color_group: &amp;<a class='enum' href='../../rust_monopoly/property/enum.ColorGroup.html' title='rust_monopoly::property::ColorGroup'>ColorGroup</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+<h4 id='method.get_x' class='method'><code>fn <a href='#method.get_x' class='fnname'>get_x</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+<h4 id='method.get_y' class='method'><code>fn <a href='#method.get_y' class='fnname'>get_y</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></h4>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html' title='core::cmp::PartialEq'>PartialEq</a> for <a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a></code></h3><div class='impl-items'><h4 id='method.eq' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#method.eq' class='fnname'>eq</a>(&amp;self, other: &amp;<a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<h4 id='method.ne' class='method'><span class="since">1.0.0</span><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#method.ne' class='fnname'>ne</a>(&amp;self, other: &amp;Rhs) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+</div><h3 id='derived_implementations'>Derived Implementations </h3><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../rust_monopoly/player/struct.Player.html' title='rust_monopoly::player::Player'>Player</a></code></h3><div class='impl-items'><h4 id='method.fmt' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#method.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "rust_monopoly";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `space` mod in crate `rust_monopoly`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, space">
+
+    <title>rust_monopoly::space - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>rust_monopoly</a></p><script>window.sidebarCurrent = {name: 'space', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>rust_monopoly</a>::<wbr><a class='mod' href=''>space</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-971' class='srclink' href='../../src/rust_monopoly/src/space.rs.html#2-191' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Space stores the player(s) who currently are landed on
+the space, if any. It also acts as a container for Properties
+since every property is a space on the board (the converse isn&#39;t
+necessarily true)</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>extern crate rand;</code></td></tr><tr><td><code>extern crate graphics;</code></td></tr><tr><td><code>extern crate glutin_window;</code></td></tr><tr><td><code>extern crate opengl_graphics;</code></td></tr><tr><td><code>extern crate piston;</code></td></tr><tr><td><code>extern crate core;</code></td></tr><tr><td><code>use std::prelude::<a class='mod' href='https://doc.rust-lang.org/nightly/std/prelude/v1/index.html' title='std::prelude::v1'>v1</a>::*;</code></td></tr><tr><td><code>use std::rc::<a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>;</code></td></tr><tr><td><code>use std::cell::<a class='struct' href='https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html' title='core::cell::RefCell'>RefCell</a>;</code></td></tr><tr><td><code>use piston::input::*;</code></td></tr><tr><td><code>use opengl_graphics::GlGraphics;</code></td></tr><tr><td><code>use super::<a class='mod' href='../../rust_monopoly/player/index.html' title='rust_monopoly::player'>player</a>::*;</code></td></tr><tr><td><code>use super::<a class='mod' href='../../rust_monopoly/property/index.html' title='rust_monopoly::property'>property</a>::*;</code></td></tr><tr><td><code>use super::<a class='mod' href='../../rust_monopoly/game/index.html' title='rust_monopoly::game'>game</a>::*;</code></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Space.html'
+                               title='rust_monopoly::space::Space'>Space</a></td>
+                        <td class='docblock short'>
+                             <p>Represents a space on the board that players can land on
+(not necessarily a property)</p>
+                        </td>
+                    </tr>
+                </table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.SpaceEnum.html'
+                               title='rust_monopoly::space::SpaceEnum'>SpaceEnum</a></td>
+                        <td class='docblock short'>
+                             <p>Represents the type of a space (property, tax, card draw, jail, etc.)</p>
+                        </td>
+                    </tr>
+                </table><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.ATL_AVE.html'
+                               title='rust_monopoly::space::ATL_AVE'>ATL_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.BALT_AVE.html'
+                               title='rust_monopoly::space::BALT_AVE'>BALT_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.BDWK.html'
+                               title='rust_monopoly::space::BDWK'>BDWK</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.BO_RR.html'
+                               title='rust_monopoly::space::BO_RR'>BO_RR</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.CHANCE_BOT.html'
+                               title='rust_monopoly::space::CHANCE_BOT'>CHANCE_BOT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.CHANCE_RIGHT.html'
+                               title='rust_monopoly::space::CHANCE_RIGHT'>CHANCE_RIGHT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.CHANCE_TOP.html'
+                               title='rust_monopoly::space::CHANCE_TOP'>CHANCE_TOP</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.COMM_CHEST_BOT.html'
+                               title='rust_monopoly::space::COMM_CHEST_BOT'>COMM_CHEST_BOT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.COMM_CHEST_LEFT.html'
+                               title='rust_monopoly::space::COMM_CHEST_LEFT'>COMM_CHEST_LEFT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.COMM_CHEST_RIGHT.html'
+                               title='rust_monopoly::space::COMM_CHEST_RIGHT'>COMM_CHEST_RIGHT</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.CONN_AVE.html'
+                               title='rust_monopoly::space::CONN_AVE'>CONN_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.ELEC_UTIL.html'
+                               title='rust_monopoly::space::ELEC_UTIL'>ELEC_UTIL</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.FREE_PARKING.html'
+                               title='rust_monopoly::space::FREE_PARKING'>FREE_PARKING</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.GO.html'
+                               title='rust_monopoly::space::GO'>GO</a></td>
+                        <td class='docblock short'>
+                             <p>Space indices</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.GO_TO_JAIL.html'
+                               title='rust_monopoly::space::GO_TO_JAIL'>GO_TO_JAIL</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.IL_AVE.html'
+                               title='rust_monopoly::space::IL_AVE'>IL_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.INCOME_TAX.html'
+                               title='rust_monopoly::space::INCOME_TAX'>INCOME_TAX</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.IN_AVE.html'
+                               title='rust_monopoly::space::IN_AVE'>IN_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.JAIL.html'
+                               title='rust_monopoly::space::JAIL'>JAIL</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.KY_AVE.html'
+                               title='rust_monopoly::space::KY_AVE'>KY_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.LUXURY_TAX.html'
+                               title='rust_monopoly::space::LUXURY_TAX'>LUXURY_TAX</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.MAR_GARD.html'
+                               title='rust_monopoly::space::MAR_GARD'>MAR_GARD</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.MED_AVE.html'
+                               title='rust_monopoly::space::MED_AVE'>MED_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.NC_AVE.html'
+                               title='rust_monopoly::space::NC_AVE'>NC_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.NY_AVE.html'
+                               title='rust_monopoly::space::NY_AVE'>NY_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.ORIENT_AVE.html'
+                               title='rust_monopoly::space::ORIENT_AVE'>ORIENT_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.PAC_AVE.html'
+                               title='rust_monopoly::space::PAC_AVE'>PAC_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.PARK_PL.html'
+                               title='rust_monopoly::space::PARK_PL'>PARK_PL</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.PA_AVE.html'
+                               title='rust_monopoly::space::PA_AVE'>PA_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.PA_RR.html'
+                               title='rust_monopoly::space::PA_RR'>PA_RR</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.READING_RR.html'
+                               title='rust_monopoly::space::READING_RR'>READING_RR</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.SL_RR.html'
+                               title='rust_monopoly::space::SL_RR'>SL_RR</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.STATES_AVE.html'
+                               title='rust_monopoly::space::STATES_AVE'>STATES_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.ST_CHAR_PL.html'
+                               title='rust_monopoly::space::ST_CHAR_PL'>ST_CHAR_PL</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.ST_JAMES_PL.html'
+                               title='rust_monopoly::space::ST_JAMES_PL'>ST_JAMES_PL</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.TN_AVE.html'
+                               title='rust_monopoly::space::TN_AVE'>TN_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.VA_AVE.html'
+                               title='rust_monopoly::space::VA_AVE'>VA_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.VENTNOR_AVE.html'
+                               title='rust_monopoly::space::VENTNOR_AVE'>VENTNOR_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.VERM_AVE.html'
+                               title='rust_monopoly::space::VERM_AVE'>VERM_AVE</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='constant' href='constant.WATER_UTIL.html'
+                               title='rust_monopoly::space::WATER_UTIL'>WATER_UTIL</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "rust_monopoly";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

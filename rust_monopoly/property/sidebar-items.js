@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["HOTEL_COST",""],["HOUSE_COST",""],["MAX_NUM_HOTELS",""],["MAX_NUM_HOUSES",""]],"enum":[["ColorGroup","ColorGroups are used to determine if a player holds a monopoly."]],"struct":[["Property","Represents a property by which players can collect rent. Can be bought, sold, and traded (eventually)."]]});
